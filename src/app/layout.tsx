@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { ClerkProvider } from "@clerk/nextjs";
 
 import { cn } from "~/lib/utils";
+import { Toaster } from "~/components/ui/sonner";
 
 import "./globals.css";
 
@@ -23,6 +24,7 @@ export default function RootLayout({
       <html lang="en">
         <body className={cn("antialiased font-sans", fontSans.variable)}>
           {children}
+          <Toaster richColors position="top-right" />
         </body>
       </html>
     </ClerkProvider>

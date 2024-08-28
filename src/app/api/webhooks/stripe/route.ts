@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
 
 async function handleSubscriptionCreated(
   event: Stripe.Event,
-  updates: string[]
+  updates: string[],
 ) {
   const subscription = await retrieveSubscription(event, stripe);
   const customerEmail = getCustomerEmail(subscription);
@@ -70,7 +70,7 @@ async function handleSubscriptionCreated(
   await recordSubscriptionEvent(event, customerEmail);
 
   updates.push(
-    `Created subscription for ${customerEmail} and recorded event ${event.id}`
+    `Created subscription for ${customerEmail} and recorded event ${event.id}`,
   );
 }
 
@@ -82,13 +82,13 @@ async function handleInvoicePaid(event: Stripe.Event, updates: string[]) {
   await recordSubscriptionEvent(event, customerEmail);
 
   updates.push(
-    `Updated invoice status to 'paid' and recorded event ${event.id} for ${customerEmail}`
+    `Updated invoice status to 'paid' and recorded event ${event.id} for ${customerEmail}`,
   );
 }
 
 async function handleInvoicePaymentFailed(
   event: Stripe.Event,
-  updates: string[]
+  updates: string[],
 ) {
   const invoice = event.data.object as Stripe.Invoice;
   const customerEmail = getCustomerEmailFromInvoice(invoice);
@@ -97,13 +97,13 @@ async function handleInvoicePaymentFailed(
   await recordSubscriptionEvent(event, customerEmail);
 
   updates.push(
-    `Updated invoice status to 'unpaid' and recorded event ${event.id} for ${customerEmail}`
+    `Updated invoice status to 'unpaid' and recorded event ${event.id} for ${customerEmail}`,
   );
 }
 
 async function handleSubscriptionUpdated(
   event: Stripe.Event,
-  updates: string[]
+  updates: string[],
 ) {
   const subscription = await retrieveSubscription(event, stripe);
   const customerEmail = getCustomerEmail(subscription);
@@ -113,13 +113,13 @@ async function handleSubscriptionUpdated(
   await recordSubscriptionEvent(event, customerEmail);
 
   updates.push(
-    `Updated subscription details and recorded event ${event.id} for ${customerEmail}`
+    `Updated subscription details and recorded event ${event.id} for ${customerEmail}`,
   );
 }
 
 async function handleSubscriptionDeleted(
   event: Stripe.Event,
-  updates: string[]
+  updates: string[],
 ) {
   const subscription = await retrieveSubscription(event, stripe);
   const customerEmail = getCustomerEmail(subscription);
@@ -128,6 +128,6 @@ async function handleSubscriptionDeleted(
   await recordSubscriptionEvent(event, customerEmail);
 
   updates.push(
-    `Deleted subscription and recorded event ${event.id} for ${customerEmail}`
+    `Deleted subscription and recorded event ${event.id} for ${customerEmail}`,
   );
 }

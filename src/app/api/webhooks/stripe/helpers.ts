@@ -7,7 +7,7 @@ import { subscriptionEvents, users } from "~/server/db/schema";
 
 export async function constructStripeEvent(
   req: NextRequest,
-  stripe: Stripe
+  stripe: Stripe,
 ): Promise<{ event?: Stripe.Event; error?: NextResponse }> {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature") as string;
@@ -16,7 +16,7 @@ export async function constructStripeEvent(
     const event = stripe.webhooks.constructEvent(
       body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET!,
     );
     return { event };
   } catch (err) {
@@ -29,7 +29,7 @@ function createErrorResponse(err: unknown): NextResponse {
   if (err instanceof Error) {
     return NextResponse.json(
       { error: `Webhook Error: ${err.message}` },
-      { status: 400 }
+      { status: 400 },
     );
   }
   return NextResponse.json({ error: "Unknown error" }, { status: 500 });
@@ -37,11 +37,11 @@ function createErrorResponse(err: unknown): NextResponse {
 
 export async function retrieveSubscription(
   event: Stripe.Event,
-  stripe: Stripe
+  stripe: Stripe,
 ): Promise<Stripe.Subscription> {
   const subscription = await stripe.subscriptions.retrieve(
     (event.data.object as Stripe.Subscription).id,
-    { expand: ["customer"] }
+    { expand: ["customer"] },
   );
 
   return subscription;
@@ -51,7 +51,7 @@ export function getCustomerEmail(subscription: Stripe.Subscription): string {
   const customerEmail = (subscription.customer as Stripe.Customer).email;
   if (!customerEmail) {
     throw new Error(
-      `Customer email not found for subscription: ${subscription.id}`
+      `Customer email not found for subscription: ${subscription.id}`,
     );
   }
 
@@ -73,7 +73,7 @@ export function getCurrentPlan(subscription: Stripe.Subscription): string {
 export async function updateSubscribedUser(
   customerEmail: string,
   subscription: Stripe.Subscription,
-  subscriptionType: string
+  subscriptionType: string,
 ) {
   // If the subscription is set to cancel at the end of the period, set the next invoice date to null
   const nextInvoiceDate = subscription.cancel_at_period_end
@@ -93,7 +93,7 @@ export async function updateSubscribedUser(
 
 export async function recordSubscriptionEvent(
   event: Stripe.Event,
-  customerEmail: string
+  customerEmail: string,
 ) {
   await db.insert(subscriptionEvents).values({
     eventId: event.id,
@@ -106,7 +106,7 @@ export function handleError(
   err: unknown,
   customerEmail: string | null | undefined,
   updates: string[],
-  errors: string[]
+  errors: string[],
 ): NextResponse {
   const errorMessage = err instanceof Error ? err.message : "Unknown error";
   errors.push(`Error occurred at payment-success db update: ${errorMessage}`);
@@ -118,7 +118,7 @@ export function handleError(
       updates,
       errors,
     },
-    { status: 500 }
+    { status: 500 },
   );
 }
 
@@ -132,7 +132,7 @@ export function getCustomerEmailFromInvoice(invoice: Stripe.Invoice): string {
 
 export async function updateInvoiceStatus(
   customerEmail: string,
-  status: string
+  status: string,
 ) {
   await db
     .update(users)

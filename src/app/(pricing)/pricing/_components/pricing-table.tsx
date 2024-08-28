@@ -46,7 +46,7 @@ export default function PricingTable() {
             <a
               href={getFormattedPaymentLink(
                 plan.link,
-                user?.emailAddresses[0].emailAddress ?? ""
+                user?.emailAddresses[0].emailAddress ?? "",
               )}
               target="_blank"
               rel="noreferrer"

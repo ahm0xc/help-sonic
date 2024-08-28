@@ -34,7 +34,7 @@ export const users = createTable(
   },
   (t) => ({
     emailIdx: uniqueIndex("email_idx").on(t.email),
-  })
+  }),
 );
 
 export type UserSelectType = typeof users.$inferSelect;
