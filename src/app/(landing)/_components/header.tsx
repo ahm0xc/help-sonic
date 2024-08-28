@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 import { Button } from "~/components/ui/button";
 
@@ -10,7 +10,15 @@ function Header() {
         {/* <Image src="/logo.png" alt="Helpsonic" width={150} height={40} /> */}
         <h1 className="text-2xl font-bold">Helpsonic</h1>
       </Link>
-      <nav>
+      <nav className="flex items-center">
+        <div className="flex items-center gap-6 mr-10">
+          <Link href="/#prompt-enhancer" className="hover:text-blue-500">
+            Prompt Enhancer
+          </Link>
+          <Link href="/pricing" className="hover:text-blue-500">
+            Pricing
+          </Link>
+        </div>
         <SignedIn>
           <UserButton
             appearance={{
@@ -21,9 +29,11 @@ function Header() {
           />
         </SignedIn>
         <SignedOut>
-          <Button className="bg-blue-600 text-white px-4 py-2 rounded">
-            Sign up
-          </Button>
+          <SignInButton>
+            <Button className="bg-blue-600 text-white px-4 py-2 rounded">
+              Sign up
+            </Button>
+          </SignInButton>
         </SignedOut>
       </nav>
     </header>

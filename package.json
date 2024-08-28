@@ -12,7 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "fm": "prettier --write ."
+    "fm": "prettier --write . --cache"
   },
   "dependencies": {
     "@ai-sdk/openai": "^0.0.54",
