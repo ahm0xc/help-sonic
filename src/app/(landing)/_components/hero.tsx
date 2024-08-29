@@ -1,3 +1,15 @@
+import Marquee from "react-fast-marquee";
+
+const AI_LOGOS = [
+  "anthropic",
+  "gemeni",
+  "groq",
+  "meta-ai",
+  "mistral",
+  "openai",
+  "x-ai",
+];
+
 export default function Hero() {
   return (
     <div className="container mx-auto px-4 py-28 pb-20">
@@ -13,17 +25,22 @@ export default function Hero() {
             Perfect Prompt!
           </span>
         </h2>
-        <p className="text-gray-600 mb-4">Works on 20+ AI bots</p>
-        <div className="flex justify-center space-x-4 items-center">
-          {["openai", "groq", "bard"].map((platform) => (
+        <p className="text-gray-600 mb-4 text-sm">Works on 20+ AI bots</p>
+        <Marquee
+          className="max-w-xl mx-auto mt-10"
+          gradientColor="white"
+          gradient
+          gradientWidth={100}
+        >
+          {[...AI_LOGOS, ...AI_LOGOS].map((logo, idx) => (
             <img
-              key={platform}
-              src={`/${platform.toLowerCase()}-logo.png`}
-              alt={platform}
-              className="h-6"
+              key={`logo-cloud//${logo}-${idx}`}
+              src={`/${logo}-logo.png`}
+              alt={logo}
+              className="h-6 mx-6"
             />
           ))}
-        </div>
+        </Marquee>
       </div>
     </div>
   );

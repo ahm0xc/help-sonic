@@ -10,7 +10,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import { cn, getRandomItem } from "~/lib/utils";
+import { cn, getRandomItem, getRandomItems } from "~/lib/utils";
 import { generate } from "../_actions";
 import { BAB_PROMPTS, RTF_PROMPTS, TAG_PROMPTS } from "~/config/prompts";
 import {
@@ -18,6 +18,41 @@ import {
   formatRTFPrompt,
   formatTAGPrompt,
 } from "~/helpers/prompt";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Switch } from "~/components/ui/switch";
+
+const PREDEFINED_ROLES = [
+  "Writer",
+  "Rewriter",
+  "Editor",
+  "SEO Specialist",
+  "Social Media Manager",
+  "Email Marketer",
+  "Copywriter",
+  "Proofreader",
+  "Content Curator",
+  "Brand Voice Specialist",
+];
+
+const PREDEFINED_VOICE_TONES = [
+  "Conversational",
+  "Professional",
+  "Inspirational",
+  "Persuasive",
+  "Urgent",
+  "Bold",
+  "Empathetic",
+  "Minimalistic",
+];
+
+const PREDEFINED_DOCUMENTS = ["Nothing", "Email", "Newsletter"];
 
 export default function PromptEnhancer() {
   const [selectedPromptEnhancer, setSelectedPromptEnhancer] = useState<
@@ -28,7 +63,7 @@ export default function PromptEnhancer() {
 
   return (
     <div className="container" id="prompt-enhancer">
-      <div className="border rounded-3xl p-10 grid grid-cols-2 gap-10">
+      <div className="border rounded-3xl p-10 grid grid-cols-2 gap-10 bg-background shadow-xl">
         <section>
           <h4 className="text-2xl font-bold">Choose prompt Enhancer</h4>
           <div className="flex flex-row gap-4 mt-6">
@@ -115,14 +150,24 @@ function OutputDisplay({ output }: { output: string }) {
     toast.success("Copied to clipboard");
   }
   return (
-    <div>
+    <div className="relative">
       <div>
         <p className="text-lg whitespace-pre-wrap">{output}</p>
       </div>
-      <div className="mt-4 flex items-center gap-2">
-        <Button size="sm" variant="outline" onClick={handleCopy}>
-          <CopyIcon className="h-3 w-3 mr-2" /> Copy
-        </Button>
+      <div
+        aria-label="output-footer"
+        className="flex items-end justify-between"
+      >
+        <div className="mt-4 flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={handleCopy}>
+            <CopyIcon className="h-3 w-3 mr-2" /> Copy
+          </Button>
+        </div>
+        <div>
+          <p className="text-sm text-foreground/80">
+            {output.length} characters
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -149,15 +194,23 @@ function RTFForm({
   setIsOutputLoading: Dispatch<SetStateAction<boolean>>;
   isOutputLoading: boolean;
 }) {
+  const [isUsingCustomRole, setIsUsingCustomRole] = useState(false);
+  const [role, setRole] = useState<string>(PREDEFINED_ROLES[0]);
+  const [tone, setTone] = useState<string>(PREDEFINED_VOICE_TONES[0]);
+  const [documentType, setDocumentType] = useState<string>(
+    PREDEFINED_DOCUMENTS[0],
+  );
+  const [isHumanizeResponseEnabled, setIsHumanizeResponseEnabled] =
+    useState(true);
   const formRef = useRef<HTMLFormElement>(null);
+  const roleInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     try {
       const formData = new FormData(e.target as HTMLFormElement);
-      const { role, task, format } = Object.fromEntries(formData.entries()) as {
-        role: string;
+      const { task, format } = Object.fromEntries(formData.entries()) as {
         task: string;
         format: string;
       };
@@ -170,18 +223,39 @@ function RTFForm({
       setOutput("");
       setIsOutputLoading(true);
 
-      const randomRTFPrompt = getRandomItem(RTF_PROMPTS);
-      const chosenPrompt = formatRTFPrompt(randomRTFPrompt.prompt, {
-        role,
-        task,
-        format,
-      });
+      const randomRTFPrompts = getRandomItems(RTF_PROMPTS, 5);
+      const chosenPrompts = randomRTFPrompts.map((rp) =>
+        formatRTFPrompt(rp.prompt, {
+          role,
+          task,
+          format,
+        }),
+      );
 
       const { output } =
-        await generate(`Enhance the prompt given bellow and just return the prompt:
------------
-${chosenPrompt}
+        await generate(`You are a master prompt engineer. Your task is to generate prompts based on the users demand. The generated should have the following things: \n
+        ROLE (role of the AI to think as. Should be included in the prompt should have): ${role},\n
+        TASK (task to be included in the prompt should have): ${task},\n
+        FORMAT (format of the prompt should have): ${format},\n
+        TONE (tone of voice the prompt should have): ${tone},\n
+        ${documentType.toLowerCase() !== "nothing" && "DOCUMENT TYPE (the document type prompt should be formatted in): " + documentType}\n
+
+        Here are some examples of prompts:
+        ${chosenPrompts.join("\n\n")}
+
+        
+        Instructions:
+        - based on the examples generate a new prompt based on the details above
+        - Don't copy over the example prompts generate a personalized prompt
+        ${isHumanizeResponseEnabled && "- Add instructions in the prompt to generate responses in a humanize way"}
+        - only return the prompt.
         `);
+
+      //       const { output } =
+      //         await generate(`Enhance the prompt given bellow and just return the prompt:
+      // -----------
+      // ${chosenPrompt}
+      //         `);
 
       for await (const delta of readStreamableValue(output)) {
         isOutputLoading && setIsOutputLoading(false);
@@ -202,16 +276,130 @@ ${chosenPrompt}
     <div>
       <form onSubmit={handleSubmit} ref={formRef}>
         <div className="space-y-5">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="role">Role</Label>
-            <Input
-              type="text"
-              id="role"
-              name="role"
-              placeholder="Facebook ad manager"
-              autoComplete="off"
-            />
+          <div className="grid grid-cols-2 gap-6">
+            <div className="flex flex-col gap-2">
+              {isUsingCustomRole ? (
+                <>
+                  {" "}
+                  <Label htmlFor="role">Role</Label>
+                  <Input
+                    type="text"
+                    id="role"
+                    name="role"
+                    placeholder="Facebook ad manager"
+                    autoComplete="off"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    ref={roleInputRef}
+                    required
+                  />
+                </>
+              ) : (
+                <>
+                  <Label htmlFor="role">Role</Label>
+                  <Select
+                    defaultValue={PREDEFINED_ROLES[0]}
+                    required
+                    onValueChange={setRole}
+                  >
+                    <SelectTrigger
+                      name="role"
+                      id="role"
+                      className="w-full !min-w-full"
+                    >
+                      <SelectValue placeholder="Role" className="w-full" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PREDEFINED_ROLES.map((role) => (
+                        <SelectItem
+                          key={`predefined-role//${role}`}
+                          value={role}
+                        >
+                          {role}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="custom-role-checkbox"
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setIsUsingCustomRole(true);
+                      setRole("");
+                      setTimeout(() => {
+                        roleInputRef.current?.focus();
+                      }, 100);
+                    } else {
+                      setRole(PREDEFINED_ROLES[0]);
+                      setIsUsingCustomRole(false);
+                    }
+                  }}
+                />
+                <label
+                  htmlFor="custom-role-checkbox"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Use custom role
+                </label>
+              </div>
+              <div className="mt-2">
+                <Label htmlFor="document">Document</Label>
+                <Select
+                  defaultValue={PREDEFINED_DOCUMENTS[0]}
+                  onValueChange={setDocumentType}
+                  required
+                >
+                  <SelectTrigger
+                    name="document"
+                    id="document"
+                    className="w-full !min-w-full"
+                  >
+                    <SelectValue placeholder="Document" className="w-full" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PREDEFINED_DOCUMENTS.map((document) => (
+                      <SelectItem
+                        key={`predefined-document//${document}`}
+                        value={document}
+                      >
+                        {document}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="">
+              <Label htmlFor="tone">Tone</Label>
+              <Select
+                defaultValue={PREDEFINED_VOICE_TONES[0]}
+                onValueChange={setTone}
+                required
+              >
+                <SelectTrigger
+                  name="tone"
+                  id="tone"
+                  className="w-full !min-w-full"
+                >
+                  <SelectValue placeholder="Tone" className="w-full" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PREDEFINED_VOICE_TONES.map((tone) => (
+                    <SelectItem
+                      key={`predefined-voice-tone//${tone}`}
+                      value={tone}
+                    >
+                      {tone}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="task">Task</Label>
             <Textarea
@@ -220,6 +408,7 @@ ${chosenPrompt}
               placeholder="Design a compelling Facebook ad campaign to promote a new line of fitness apparel for a sports brand."
               rows={6}
               autoComplete="off"
+              required
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -230,8 +419,18 @@ ${chosenPrompt}
               placeholder="Create a storyboard outlining the sequence of ad creatives, including ad copy, visuals and targeting strategies."
               rows={4}
               autoComplete="off"
+              required
             />
           </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="humanize-response"
+              checked={isHumanizeResponseEnabled}
+              onCheckedChange={setIsHumanizeResponseEnabled}
+            />
+            <Label htmlFor="humanize-response">Humanize response</Label>
+          </div>
+
           <SignedIn>
             <div className="flex items-center gap-3">
               <Button
