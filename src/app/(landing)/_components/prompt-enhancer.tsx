@@ -70,7 +70,7 @@ export default function PromptEnhancer() {
             <button
               className={cn(
                 "bg-secondary text-base px-3 py-1 font-medium rounded-full",
-                selectedPromptEnhancer === "RTF" && "bg-blue-500 text-white",
+                selectedPromptEnhancer === "RTF" && "bg-blue-500 text-white"
               )}
               onClick={() => setSelectedPromptEnhancer("RTF")}
             >
@@ -79,7 +79,7 @@ export default function PromptEnhancer() {
             <button
               className={cn(
                 "bg-secondary text-base px-3 py-1 font-medium rounded-full",
-                selectedPromptEnhancer === "TAG" && "bg-blue-500 text-white",
+                selectedPromptEnhancer === "TAG" && "bg-blue-500 text-white"
               )}
               onClick={() => setSelectedPromptEnhancer("TAG")}
             >
@@ -88,7 +88,7 @@ export default function PromptEnhancer() {
             <button
               className={cn(
                 "bg-secondary text-base px-3 py-1 font-medium rounded-full",
-                selectedPromptEnhancer === "BAF" && "bg-blue-500 text-white",
+                selectedPromptEnhancer === "BAF" && "bg-blue-500 text-white"
               )}
               onClick={() => setSelectedPromptEnhancer("BAF")}
             >
@@ -198,7 +198,7 @@ function RTFForm({
   const [role, setRole] = useState<string>(PREDEFINED_ROLES[0]);
   const [tone, setTone] = useState<string>(PREDEFINED_VOICE_TONES[0]);
   const [documentType, setDocumentType] = useState<string>(
-    PREDEFINED_DOCUMENTS[0],
+    PREDEFINED_DOCUMENTS[0]
   );
   const [isHumanizeResponseEnabled, setIsHumanizeResponseEnabled] =
     useState(true);
@@ -229,7 +229,7 @@ function RTFForm({
           role,
           task,
           format,
-        }),
+        })
       );
 
       const { output } =
@@ -424,6 +424,7 @@ function RTFForm({
           </div>
           <div className="flex items-center space-x-2">
             <Switch
+              className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-500 data-[state=checked]:to-blue-500"
               id="humanize-response"
               checked={isHumanizeResponseEnabled}
               onCheckedChange={setIsHumanizeResponseEnabled}
@@ -607,7 +608,7 @@ function BABForm({
     try {
       const formData = new FormData(e.target as HTMLFormElement);
       const { before, after, bridge } = Object.fromEntries(
-        formData.entries(),
+        formData.entries()
       ) as {
         before: string;
         after: string;
