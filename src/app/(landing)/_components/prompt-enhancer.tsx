@@ -1,7 +1,12 @@
 "use client";
 
 import { type Dispatch, type SetStateAction, useRef, useState } from "react";
-import { CopyIcon, RotateCcwIcon, SparklesIcon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  CopyIcon,
+  RotateCcwIcon,
+  SparklesIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { readStreamableValue } from "ai/rsc";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
@@ -52,6 +57,24 @@ const PREDEFINED_VOICE_TONES = [
   "Minimalistic",
 ];
 
+const PREDEFINED_WORD_COUNTS = [
+  "None",
+  "600-1000",
+  "1300-1800",
+  "2000-2600",
+  "3000+",
+];
+
+const PREDEFINED_PERSPECTIVE = [
+  "None",
+  "First Person Singular (I, Me)",
+  "First Person Plural (We, Us)",
+  "Second Person (You, Yours)",
+  "Third Person (He, She)",
+];
+
+const PREDEFINED_AI_IMAGE_OPTIONS = ["None", "1", "2", "3"];
+
 const PREDEFINED_DOCUMENTS = ["Nothing", "Email", "Newsletter"];
 
 export default function PromptEnhancer() {
@@ -70,7 +93,7 @@ export default function PromptEnhancer() {
             <button
               className={cn(
                 "bg-secondary text-base px-3 py-1 font-medium rounded-full",
-                selectedPromptEnhancer === "RTF" && "bg-blue-500 text-white"
+                selectedPromptEnhancer === "RTF" && "bg-blue-500 text-white",
               )}
               onClick={() => setSelectedPromptEnhancer("RTF")}
             >
@@ -79,7 +102,7 @@ export default function PromptEnhancer() {
             <button
               className={cn(
                 "bg-secondary text-base px-3 py-1 font-medium rounded-full",
-                selectedPromptEnhancer === "TAG" && "bg-blue-500 text-white"
+                selectedPromptEnhancer === "TAG" && "bg-blue-500 text-white",
               )}
               onClick={() => setSelectedPromptEnhancer("TAG")}
             >
@@ -88,7 +111,7 @@ export default function PromptEnhancer() {
             <button
               className={cn(
                 "bg-secondary text-base px-3 py-1 font-medium rounded-full",
-                selectedPromptEnhancer === "BAF" && "bg-blue-500 text-white"
+                selectedPromptEnhancer === "BAF" && "bg-blue-500 text-white",
               )}
               onClick={() => setSelectedPromptEnhancer("BAF")}
             >
@@ -198,10 +221,24 @@ function RTFForm({
   const [role, setRole] = useState<string>(PREDEFINED_ROLES[0]);
   const [tone, setTone] = useState<string>(PREDEFINED_VOICE_TONES[0]);
   const [documentType, setDocumentType] = useState<string>(
-    PREDEFINED_DOCUMENTS[0]
+    PREDEFINED_DOCUMENTS[0],
+  );
+  const [wordCount, setWordCount] = useState<string>(PREDEFINED_WORD_COUNTS[0]);
+  const [perspective, setPerspective] = useState<string>(
+    PREDEFINED_PERSPECTIVE[0],
+  );
+  const [aiImage, setAiImage] = useState<string>(
+    PREDEFINED_AI_IMAGE_OPTIONS[0],
   );
   const [isHumanizeResponseEnabled, setIsHumanizeResponseEnabled] =
     useState(true);
+  const [isFaqIncluded, setIsFaqIncluded] = useState(false);
+  const [isConclusionIncluded, setIsConclusionIncluded] = useState(false);
+  const [isSourceIncluded, setIsSourceIncluded] = useState(false);
+  const [isSEOBestPracticesIncluded, setIsSEOBestPracticesIncluded] =
+    useState(false);
+  const [isAdvanceOptionsExpanded, setIsAdvanceOptionsExpanded] =
+    useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const roleInputRef = useRef<HTMLInputElement>(null);
 
@@ -229,7 +266,7 @@ function RTFForm({
           role,
           task,
           format,
-        })
+        }),
       );
 
       const { output } =
@@ -373,7 +410,7 @@ function RTFForm({
               </div>
             </div>
             <div className="">
-              <Label htmlFor="tone">Tone</Label>
+              <Label htmlFor="tone">Tone of Voice</Label>
               <Select
                 defaultValue={PREDEFINED_VOICE_TONES[0]}
                 onValueChange={setTone}
@@ -430,6 +467,180 @@ function RTFForm({
               onCheckedChange={setIsHumanizeResponseEnabled}
             />
             <Label htmlFor="humanize-response">Humanize response</Label>
+          </div>
+
+          <div className="my-4">
+            <button
+              type="button"
+              className="text-sm text-blue-600 font-medium"
+              onClick={() => setIsAdvanceOptionsExpanded((prev) => !prev)}
+            >
+              Advance options{" "}
+              <ChevronRightIcon
+                className={cn(
+                  "w-4 h-4 inline-block",
+                  isAdvanceOptionsExpanded && "rotate-90",
+                )}
+              />
+            </button>
+            {isAdvanceOptionsExpanded && (
+              <div className="grid grid-cols-2 gap-6 mt-4">
+                <div className="">
+                  <Label htmlFor="word-count">Word count</Label>
+                  <Select
+                    defaultValue={PREDEFINED_WORD_COUNTS[0]}
+                    onValueChange={setWordCount}
+                    required
+                  >
+                    <SelectTrigger
+                      name="word-count"
+                      id="word-count"
+                      className="w-full !min-w-full"
+                    >
+                      <SelectValue
+                        placeholder="Word count"
+                        className="w-full"
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PREDEFINED_WORD_COUNTS.map((option) => (
+                        <SelectItem
+                          key={`predefined-word-count//${option}`}
+                          value={option}
+                        >
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="">
+                  <Label htmlFor="perspective">Perspective</Label>
+                  <Select
+                    defaultValue={PREDEFINED_PERSPECTIVE[0]}
+                    onValueChange={setPerspective}
+                    required
+                  >
+                    <SelectTrigger
+                      name="perspective"
+                      id="perspective"
+                      className="w-full !min-w-full"
+                    >
+                      <SelectValue
+                        placeholder="Perspective"
+                        className="w-full"
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PREDEFINED_PERSPECTIVE.map((option) => (
+                        <SelectItem
+                          key={`predefined-perspective//${option}`}
+                          value={option}
+                        >
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="">
+                  <Label htmlFor="ai-images">AI Images</Label>
+                  <Select
+                    defaultValue={PREDEFINED_AI_IMAGE_OPTIONS[0]}
+                    onValueChange={setAiImage}
+                    required
+                  >
+                    <SelectTrigger
+                      name="ai-images"
+                      id="ai-images"
+                      className="w-full !min-w-full"
+                    >
+                      <SelectValue placeholder="AI Images" className="w-full" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PREDEFINED_AI_IMAGE_OPTIONS.map((option) => (
+                        <SelectItem
+                          key={`predefined-ai-image//${option}`}
+                          value={option}
+                        >
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="keywords">Keywords</Label>
+                  <Input
+                    type="keywords"
+                    id="keywords"
+                    name="keywords"
+                    placeholder="Keywords"
+                    autoComplete="off"
+                    required
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="is-faq-included"
+                    checked={isFaqIncluded}
+                    onCheckedChange={(c) => setIsFaqIncluded(c as boolean)}
+                  />
+                  <label
+                    htmlFor="is-faq-included"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Include FAQ
+                  </label>
+                </div>
+                <div />
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="is-conclusion-included"
+                    checked={isConclusionIncluded}
+                    onCheckedChange={(c) =>
+                      setIsConclusionIncluded(c as boolean)
+                    }
+                  />
+                  <label
+                    htmlFor="is-conclusion-included"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Include Conclusion
+                  </label>
+                </div>
+                <div />
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="is-sources-included"
+                    checked={isSourceIncluded}
+                    onCheckedChange={(c) => setIsSourceIncluded(c as boolean)}
+                  />
+                  <label
+                    htmlFor="is-sources-included"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Include Sources under article
+                  </label>
+                </div>
+                <div />
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="is-seo-best-practices-included"
+                    checked={isSEOBestPracticesIncluded}
+                    onCheckedChange={(c) =>
+                      setIsSEOBestPracticesIncluded(c as boolean)
+                    }
+                  />
+                  <label
+                    htmlFor="is-seo-best-practices-included"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Include SEO best practices
+                  </label>
+                </div>
+              </div>
+            )}
           </div>
 
           <SignedIn>
@@ -608,7 +819,7 @@ function BABForm({
     try {
       const formData = new FormData(e.target as HTMLFormElement);
       const { before, after, bridge } = Object.fromEntries(
-        formData.entries()
+        formData.entries(),
       ) as {
         before: string;
         after: string;
