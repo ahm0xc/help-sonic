@@ -302,7 +302,10 @@ function RTFForm({
         - if any parameter is not specified, ignore the line
         - change the prompt so that it doesn't look always the same but keep the core meaning
         - use synonyms to make the prompt more readable
+        - enhance the given prompt below and only return the enhanced prompt
+        - don't generate responses on the enhanced prompt
 
+        PROMPT TO ENHANCE:
         <prompt>Act as {Role}, now your task will be {Task} and the content you generate should be in {format/document type}, writing tone will be {tone} and {humanizer/"make sure the copy you generate it should be 8th grade English catagoies and do aim for simpler adverbs, and adverbial phrases professional tone"} the {document} you will genrate word count should be around {wordcount} and the writting perspective {perspective}</prompt>`);
 
       for await (const delta of readStreamableValue(output)) {
