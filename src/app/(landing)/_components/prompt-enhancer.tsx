@@ -15,14 +15,10 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import { cn, getRandomItem, getRandomItems } from "~/lib/utils";
+import { cn, getRandomItem } from "~/lib/utils";
 import { generate } from "../_actions";
-import { BAB_PROMPTS, RTF_PROMPTS, TAG_PROMPTS } from "~/config/prompts";
-import {
-  formatBABPrompt,
-  formatRTFPrompt,
-  formatTAGPrompt,
-} from "~/helpers/prompt";
+import { BAB_PROMPTS, TAG_PROMPTS } from "~/config/prompts";
+import { formatBABPrompt, formatTAGPrompt } from "~/helpers/prompt";
 import {
   Select,
   SelectContent,
@@ -34,16 +30,40 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { Switch } from "~/components/ui/switch";
 
 const PREDEFINED_ROLES = [
-  "Writer",
-  "Rewriter",
-  "Editor",
-  "SEO Specialist",
-  "Social Media Manager",
-  "Email Marketer",
-  "Copywriter",
-  "Proofreader",
-  "Content Curator",
-  "Brand Voice Specialist",
+  {
+    name: "Writer",
+    description: "",
+  },
+  {
+    name: "Rewriter",
+    description:
+      "A rewriter rewrites or reformulates texts. He changes the original text so that it takes on a new form and wording without losing the meaning of the text. He avoids plagiarism, improves readability or adapts the text to an audience.",
+  },
+  {
+    name: "SEO Blog writer",
+    description:
+      "An SEO blog writer writes SEO-optimised texts on a specific topic using SEO best practice. They ensure that the texts are well-structured, readable and fulfil their intended purpose as SEO blog articles.",
+  },
+  {
+    name: "Coder",
+    description:
+      "A Coder is a professional who writes, tests, and maintains the code that allows software programs and applications to function. They translate logical solutions and designs into a programming language, ensuring that the software performs its intended tasks efficiently.",
+  },
+  {
+    name: "Social Media Manager",
+    description:
+      "A Social Media Manager is a professional who manages and creates content for social media platforms such as Facebook, Instagram, Twitter, LinkedIn, and TikTok.",
+  },
+  {
+    name: "Email Marketer",
+    description:
+      "An Email Marketer is a professional who creates and sends email campaigns to promote products or services. They use email marketing software to design, schedule, and send email messages to a targeted audience.",
+  },
+  {
+    name: "Copywriter",
+    description:
+      "A Copywriter is a professional who writes copy for various mediums such as websites, brochures, advertisements, and more.",
+  },
 ];
 
 const PREDEFINED_VOICE_TONES = [
@@ -59,6 +79,7 @@ const PREDEFINED_VOICE_TONES = [
 
 const PREDEFINED_WORD_COUNTS = [
   "None",
+  "< 100",
   "600-1000",
   "1300-1800",
   "2000-2600",
@@ -73,8 +94,6 @@ const PREDEFINED_PERSPECTIVE = [
   "Third Person (He, She)",
 ];
 
-const PREDEFINED_AI_IMAGE_OPTIONS = ["None", "1", "2", "3"];
-
 const PREDEFINED_DOCUMENTS = ["Nothing", "Email", "Newsletter"];
 
 export default function PromptEnhancer() {
@@ -85,7 +104,7 @@ export default function PromptEnhancer() {
   const [isOutputLoading, setIsOutputLoading] = useState<boolean>(false);
 
   return (
-    <div className="container" id="prompt-enhancer">
+    <div className="container scroll-m-10" id="prompt-enhancer">
       <div className="border rounded-3xl p-10 grid grid-cols-2 gap-10 bg-background shadow-xl">
         <section>
           <h4 className="text-2xl font-bold">Choose prompt Enhancer</h4>
@@ -218,7 +237,9 @@ function RTFForm({
   isOutputLoading: boolean;
 }) {
   const [isUsingCustomRole, setIsUsingCustomRole] = useState(false);
-  const [role, setRole] = useState<string>(PREDEFINED_ROLES[0]);
+  const [role, setRole] = useState<(typeof PREDEFINED_ROLES)[number]>(
+    PREDEFINED_ROLES[0],
+  );
   const [tone, setTone] = useState<string>(PREDEFINED_VOICE_TONES[0]);
   const [documentType, setDocumentType] = useState<string>(
     PREDEFINED_DOCUMENTS[0],
@@ -226,9 +247,6 @@ function RTFForm({
   const [wordCount, setWordCount] = useState<string>(PREDEFINED_WORD_COUNTS[0]);
   const [perspective, setPerspective] = useState<string>(
     PREDEFINED_PERSPECTIVE[0],
-  );
-  const [aiImage, setAiImage] = useState<string>(
-    PREDEFINED_AI_IMAGE_OPTIONS[0],
   );
   const [isHumanizeResponseEnabled, setIsHumanizeResponseEnabled] =
     useState(true);
@@ -260,39 +278,32 @@ function RTFForm({
       setOutput("");
       setIsOutputLoading(true);
 
-      const randomRTFPrompts = getRandomItems(RTF_PROMPTS, 5);
-      const chosenPrompts = randomRTFPrompts.map((rp) =>
-        formatRTFPrompt(rp.prompt, {
-          role,
-          task,
-          format,
-        }),
-      );
+      window.document.getElementById("prompt-enhancer")?.scrollIntoView({
+        behavior: "smooth",
+      });
 
       const { output } =
-        await generate(`You are a master prompt engineer. Your task is to generate prompts based on the users demand. The generated should have the following things: \n
-        ROLE (role of the AI to think as. Should be included in the prompt should have): ${role},\n
-        TASK (task to be included in the prompt should have): ${task},\n
-        FORMAT (format of the prompt should have): ${format},\n
-        TONE (tone of voice the prompt should have): ${tone},\n
-        ${documentType.toLowerCase() !== "nothing" && "DOCUMENT TYPE (the document type prompt should be formatted in): " + documentType}\n
+        await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
 
-        Here are some examples of prompts:
-        ${chosenPrompts.join("\n\n")}
+        PROMPT PARAMETERS:
+        - ROLE NAME: ${role.name}
+        - ROLE DESCRIPTION: ${role.description}
+        - TASK: ${task}
+        - FORMAT: ${format}
+        - TONE: ${tone}
+        - DOCUMENT TYPE: ${documentType}
+        - WORD COUNT: ${wordCount}
+        - PERSPECTIVE: ${perspective}
+        - HUMANIZE RESPONSE: ${isHumanizeResponseEnabled}
 
-        
-        Instructions:
-        - based on the examples generate a new prompt based on the details above
-        - Don't copy over the example prompts generate a personalized prompt
-        ${isHumanizeResponseEnabled && "- Add instructions in the prompt to generate responses in a humanize way"}
-        - only return the prompt.
-        `);
+        INSTRUCTIONS FOR PROMPT ENHANCER:
+        - fix grammatical mistakes
+        - only return the prompt
+        - if any parameter is not specified, ignore the line
+        - change the prompt so that it doesn't look always the same but keep the core meaning
+        - use synonyms to make the prompt more readable
 
-      //       const { output } =
-      //         await generate(`Enhance the prompt given bellow and just return the prompt:
-      // -----------
-      // ${chosenPrompt}
-      //         `);
+        <prompt>Act as {Role}, now your task will be {Task} and the content you generate should be in {format/document type}, writing tone will be {tone} and {humanizer/"make sure the copy you generate it should be 8th grade English catagoies and do aim for simpler adverbs, and adverbial phrases professional tone"} the {document} you will genrate word count should be around {wordcount} and the writting perspective {perspective}</prompt>`);
 
       for await (const delta of readStreamableValue(output)) {
         isOutputLoading && setIsOutputLoading(false);
@@ -325,8 +336,10 @@ function RTFForm({
                     name="role"
                     placeholder="Facebook ad manager"
                     autoComplete="off"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    value={role.name}
+                    onChange={(e) =>
+                      setRole({ name: e.target.value, description: "" })
+                    }
                     ref={roleInputRef}
                     required
                   />
@@ -335,9 +348,14 @@ function RTFForm({
                 <>
                   <Label htmlFor="role">Role</Label>
                   <Select
-                    defaultValue={PREDEFINED_ROLES[0]}
+                    defaultValue={PREDEFINED_ROLES[0].name}
                     required
-                    onValueChange={setRole}
+                    onValueChange={(v) =>
+                      setRole(
+                        PREDEFINED_ROLES.find((x) => x.name === v) ||
+                          PREDEFINED_ROLES[0],
+                      )
+                    }
                   >
                     <SelectTrigger
                       name="role"
@@ -350,9 +368,9 @@ function RTFForm({
                       {PREDEFINED_ROLES.map((role) => (
                         <SelectItem
                           key={`predefined-role//${role}`}
-                          value={role}
+                          value={role.name}
                         >
-                          {role}
+                          {role.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -365,7 +383,7 @@ function RTFForm({
                   onCheckedChange={(checked) => {
                     if (checked) {
                       setIsUsingCustomRole(true);
-                      setRole("");
+                      setRole({ name: "", description: "" });
                       setTimeout(() => {
                         roleInputRef.current?.focus();
                       }, 100);
@@ -484,162 +502,191 @@ function RTFForm({
               />
             </button>
             {isAdvanceOptionsExpanded && (
-              <div className="grid grid-cols-2 gap-6 mt-4">
-                <div className="">
-                  <Label htmlFor="word-count">Word count</Label>
-                  <Select
-                    defaultValue={PREDEFINED_WORD_COUNTS[0]}
-                    onValueChange={setWordCount}
-                    required
+              <>
+                <div className="grid grid-cols-2 gap-6 mt-4">
+                  <div
+                    aria-label="word-count"
+                    className={cn(
+                      "",
+                      role.name.toLowerCase() === "writer" && "hidden",
+                      role.name.toLowerCase() === "coder" && "hidden",
+                      role.name.toLowerCase() === "social media manager" &&
+                        "hidden",
+                    )}
                   >
-                    <SelectTrigger
-                      name="word-count"
-                      id="word-count"
-                      className="w-full !min-w-full"
+                    <Label htmlFor="word-count">Word count</Label>
+                    <Select
+                      defaultValue={PREDEFINED_WORD_COUNTS[0]}
+                      onValueChange={setWordCount}
                     >
-                      <SelectValue
-                        placeholder="Word count"
-                        className="w-full"
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PREDEFINED_WORD_COUNTS.map((option) => (
-                        <SelectItem
-                          key={`predefined-word-count//${option}`}
-                          value={option}
-                        >
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="">
-                  <Label htmlFor="perspective">Perspective</Label>
-                  <Select
-                    defaultValue={PREDEFINED_PERSPECTIVE[0]}
-                    onValueChange={setPerspective}
-                    required
+                      <SelectTrigger
+                        name="word-count"
+                        id="word-count"
+                        className="w-full !min-w-full"
+                      >
+                        <SelectValue
+                          placeholder="Word count"
+                          className="w-full"
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PREDEFINED_WORD_COUNTS.map((option) => (
+                          <SelectItem
+                            key={`predefined-word-count//${option}`}
+                            value={option}
+                          >
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div
+                    aria-label="perspective"
+                    className={cn(
+                      "",
+                      role.name.toLowerCase() === "seo blog writer" && "hidden",
+                      role.name.toLowerCase() === "coder" && "hidden",
+                      role.name.toLowerCase() === "social media manager" &&
+                        "hidden",
+                    )}
                   >
-                    <SelectTrigger
-                      name="perspective"
-                      id="perspective"
-                      className="w-full !min-w-full"
+                    <Label htmlFor="perspective">Perspective</Label>
+                    <Select
+                      defaultValue={PREDEFINED_PERSPECTIVE[0]}
+                      onValueChange={setPerspective}
                     >
-                      <SelectValue
-                        placeholder="Perspective"
-                        className="w-full"
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PREDEFINED_PERSPECTIVE.map((option) => (
-                        <SelectItem
-                          key={`predefined-perspective//${option}`}
-                          value={option}
-                        >
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="">
-                  <Label htmlFor="ai-images">AI Images</Label>
-                  <Select
-                    defaultValue={PREDEFINED_AI_IMAGE_OPTIONS[0]}
-                    onValueChange={setAiImage}
-                    required
+                      <SelectTrigger
+                        name="perspective"
+                        id="perspective"
+                        className="w-full !min-w-full"
+                      >
+                        <SelectValue
+                          placeholder="Perspective"
+                          className="w-full"
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PREDEFINED_PERSPECTIVE.map((option) => (
+                          <SelectItem
+                            key={`predefined-perspective//${option}`}
+                            value={option}
+                          >
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div
+                    aria-label="keywords"
+                    className={cn(
+                      "flex flex-col gap-2",
+                      role.name.toLowerCase() === "writer" && "hidden",
+                      role.name.toLowerCase() === "rewriter" && "hidden",
+                      role.name.toLowerCase() === "coder" && "hidden",
+                    )}
                   >
-                    <SelectTrigger
-                      name="ai-images"
-                      id="ai-images"
-                      className="w-full !min-w-full"
+                    <Label htmlFor="keywords">Keywords</Label>
+                    <Input
+                      type="keywords"
+                      id="keywords"
+                      name="keywords"
+                      placeholder="Keywords"
+                      autoComplete="off"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-3 mt-4">
+                  <div />
+                  <div
+                    aria-label="faq"
+                    className={cn(
+                      "flex items-center space-x-2",
+                      role.name.toLowerCase() === "writer" && "",
+                      role.name.toLowerCase() === "coder" && "hidden",
+                      role.name.toLowerCase() === "email marketer" && "hidden",
+                    )}
+                  >
+                    <Checkbox
+                      id="is-faq-included"
+                      checked={isFaqIncluded}
+                      onCheckedChange={(c) => setIsFaqIncluded(c as boolean)}
+                      disabled={role.name === "SEO Blog writer"}
+                    />
+                    <label
+                      htmlFor="is-faq-included"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      <SelectValue placeholder="AI Images" className="w-full" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PREDEFINED_AI_IMAGE_OPTIONS.map((option) => (
-                        <SelectItem
-                          key={`predefined-ai-image//${option}`}
-                          value={option}
-                        >
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="keywords">Keywords</Label>
-                  <Input
-                    type="keywords"
-                    id="keywords"
-                    name="keywords"
-                    placeholder="Keywords"
-                    autoComplete="off"
-                    required
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="is-faq-included"
-                    checked={isFaqIncluded}
-                    onCheckedChange={(c) => setIsFaqIncluded(c as boolean)}
-                  />
-                  <label
-                    htmlFor="is-faq-included"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      Include FAQ
+                    </label>
+                  </div>
+                  <div
+                    aria-label="conclusion"
+                    className={cn(
+                      "flex items-center space-x-2",
+                      role.name.toLowerCase() === "coder" && "hidden",
+                    )}
                   >
-                    Include FAQ
-                  </label>
-                </div>
-                <div />
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="is-conclusion-included"
-                    checked={isConclusionIncluded}
-                    onCheckedChange={(c) =>
-                      setIsConclusionIncluded(c as boolean)
-                    }
-                  />
-                  <label
-                    htmlFor="is-conclusion-included"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    <Checkbox
+                      id="is-conclusion-included"
+                      checked={isConclusionIncluded}
+                      onCheckedChange={(c) =>
+                        setIsConclusionIncluded(c as boolean)
+                      }
+                      disabled={role.name === "SEO Blog writer"}
+                    />
+                    <label
+                      htmlFor="is-conclusion-included"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Include Conclusion
+                    </label>
+                  </div>
+                  <div
+                    aria-label="sources"
+                    className={cn(
+                      "flex items-center space-x-2",
+                      role.name.toLowerCase() === "writer" && "",
+                    )}
                   >
-                    Include Conclusion
-                  </label>
-                </div>
-                <div />
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="is-sources-included"
-                    checked={isSourceIncluded}
-                    onCheckedChange={(c) => setIsSourceIncluded(c as boolean)}
-                  />
-                  <label
-                    htmlFor="is-sources-included"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    <Checkbox
+                      id="is-sources-included"
+                      checked={isSourceIncluded}
+                      onCheckedChange={(c) => setIsSourceIncluded(c as boolean)}
+                    />
+                    <label
+                      htmlFor="is-sources-included"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Include Sources under article
+                    </label>
+                  </div>
+                  <div
+                    aria-label="seo-best-practices"
+                    className={cn(
+                      "flex items-center space-x-2",
+                      role.name.toLowerCase() === "writer" && "hidden",
+                      role.name.toLowerCase() === "rewriter" && "hidden",
+                      role.name.toLowerCase() === "coder" && "hidden",
+                    )}
                   >
-                    Include Sources under article
-                  </label>
+                    <Checkbox
+                      id="is-seo-best-practices-included"
+                      checked={isSEOBestPracticesIncluded}
+                      onCheckedChange={(c) =>
+                        setIsSEOBestPracticesIncluded(c as boolean)
+                      }
+                    />
+                    <label
+                      htmlFor="is-seo-best-practices-included"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Include SEO best practices
+                    </label>
+                  </div>
                 </div>
-                <div />
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="is-seo-best-practices-included"
-                    checked={isSEOBestPracticesIncluded}
-                    onCheckedChange={(c) =>
-                      setIsSEOBestPracticesIncluded(c as boolean)
-                    }
-                  />
-                  <label
-                    htmlFor="is-seo-best-practices-included"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Include SEO best practices
-                  </label>
-                </div>
-              </div>
+              </>
             )}
           </div>
 

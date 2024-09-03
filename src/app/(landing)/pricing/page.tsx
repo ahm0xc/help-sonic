@@ -6,12 +6,12 @@ import {
   Raleway_Dots as HeadingDotFont,
   Indie_Flower as HandWritingFont,
 } from "next/font/google";
+import { eq } from "drizzle-orm";
 
 import { cn } from "~/lib/utils";
 import BuyButton from "./_components/buy-button";
 import Header from "../_components/header";
 import { db } from "~/server/db";
-import { eq } from "drizzle-orm";
 import { users } from "~/server/db/schema";
 import ManageSubscription from "./_components/manage-subscription";
 
