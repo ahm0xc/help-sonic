@@ -28,6 +28,7 @@ import {
 } from "~/components/ui/select";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Switch } from "~/components/ui/switch";
+import { Badge } from "~/components/ui/badge";
 
 const PREDEFINED_ROLES = [
   {
@@ -487,7 +488,9 @@ function RTFForm({
               checked={isHumanizeResponseEnabled}
               onCheckedChange={setIsHumanizeResponseEnabled}
             />
-            <Label htmlFor="humanize-response">Humanize response</Label>
+            <Label htmlFor="humanize-response">
+              Humanize response <Badge variant="secondary">Recommended</Badge>
+            </Label>
           </div>
 
           <div className="my-4">

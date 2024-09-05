@@ -2,7 +2,7 @@ import React from "react";
 
 import Header from "./_components/header";
 import Hero from "./_components/hero";
-import PromptEnhancer from "./_components/prompt-enhancer";
+import PromptEnhancerV2 from "./_components/prompt-enhancer-v2";
 
 const HomePage: React.FC = () => {
   return (
@@ -11,7 +11,7 @@ const HomePage: React.FC = () => {
       <Header />
       <Hero />
       <div className="pb-28">
-        <PromptEnhancer />
+        <PromptEnhancerV2 />
       </div>
     </div>
   );
