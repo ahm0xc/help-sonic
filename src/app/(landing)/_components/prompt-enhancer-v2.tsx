@@ -26,7 +26,8 @@ import {
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
-import { generate } from "../_actions";
+import { generate, saveHistory } from "../_actions";
+import { useQuery } from "@tanstack/react-query";
 
 export default function PromptEnhancerV2() {
   const [selectedPromptFramework, setSelectedPromptFramework] = useState("RTF");
@@ -63,6 +64,11 @@ export default function PromptEnhancerV2() {
     isConclusionIncluded: false,
     isSourcesIncluded: false,
     isSeoBestPracticesIncluded: false,
+  });
+
+  const { data: histories } = useQuery({
+    queryKey: ["histories"],
+    queryFn: () => fetch("/api/history").then((res) => res.json()),
   });
 
   function resetAllStates() {
@@ -283,7 +289,7 @@ export default function PromptEnhancerV2() {
         behavior: "smooth",
       });
 
-      const { output } =
+      const { output: outputStream } =
         await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
 
         PROMPT PARAMETERS:
@@ -310,9 +316,18 @@ export default function PromptEnhancerV2() {
         ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
         `);
 
-      for await (const delta of readStreamableValue(output)) {
+      let INTERNAL_output = "";
+
+      for await (const delta of readStreamableValue(outputStream)) {
         isOutputLoading && setIsOutputLoading(false);
-        setOutput((currentGeneration) => `${currentGeneration}${delta}`);
+        INTERNAL_output += delta;
+        setOutput(INTERNAL_output);
+      }
+
+      const res = await saveHistory(INTERNAL_output, data);
+
+      if (res?.error) {
+        toast.error(res.error);
       }
     } catch (error) {
       console.error(error);
@@ -580,8 +595,8 @@ export default function PromptEnhancerV2() {
             </form>
           </div>
         </section>
-        <section className="">
-          <div className="p-6 rounded-2xl border h-full overflow-y-auto">
+        <section className="h-[600px] relative">
+          <div className="p-6 rounded-2xl border h-full overflow-y-auto space-y-4 relative">
             {isOutputLoading && !output && (
               <div className="p-5 rounded-xl bg-secondary/50 border">
                 <div className="flex flex-col gap-2">
@@ -591,15 +606,33 @@ export default function PromptEnhancerV2() {
                 </div>
               </div>
             )}
-            {output && <OutputCard output={output} />}
+            {output &&
+              !histories.some(
+                (history: any) => history.response === output,
+              ) && (
+                <OutputCard
+                  output={output}
+                  className="bg-blue-500/10 border-blue-600/10 text-blue-800"
+                />
+              )}
+            {histories?.map((history: any) => (
+              <OutputCard key={history.id} output={history.response} />
+            ))}
           </div>
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none" />
         </section>
       </div>
     </div>
   );
 }
 
-function OutputCard({ output }: { output: string }) {
+function OutputCard({
+  output,
+  className,
+}: {
+  output: string;
+  className?: string;
+}) {
   const [isCopied, setIsCopied] = useState(false);
 
   function handleCopy() {
@@ -609,7 +642,12 @@ function OutputCard({ output }: { output: string }) {
   }
 
   return (
-    <div className="p-5 group rounded-xl bg-secondary/50 border text-[15px] relative ">
+    <div
+      className={cn(
+        "p-5 group rounded-xl bg-secondary/50 border text-[15px] relative",
+        className,
+      )}
+    >
       <div className="">{output}</div>
       <div className="flex items-center gap-2 justify-between mt-3">
         <p className="text-muted-foreground text-xs">
@@ -633,6 +671,6 @@ function OutputCard({ output }: { output: string }) {
 
 const PROMPTS = {
   rtf: {
-    prompt: `Act as {Role}, now your task will be {Task} and the content you generate should be in {format/document type}, writing tone will be {tone} and {humanizer/"make sure the copy you generate it should be 8th grade English catagoies and do aim for simpler adverbs, and adverbial phrases professional tone"} the {document} you will genrate word count should be around {wordcount} and the writting perspective {perspective}`,
+    prompt: `Act as {Role}, now your task will be {Task} and the content you generate should be in {format/document type}, writing tone will be {tone} and {humanizer/"make sure the copy you generate it should be 8th grade English catagories and do aim for simpler adverbs, and adverbial phrases professional tone"} the {document} you will generate word count should be around {wordcount} and the writing perspective {perspective}`,
   },
 };

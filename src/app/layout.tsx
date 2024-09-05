@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 
 import { cn } from "~/lib/utils";
 import { Toaster } from "~/components/ui/sonner";
+import QueryProvider from "~/components/query-provider";
 
 import "./globals.css";
 
@@ -23,8 +24,10 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={cn("antialiased font-sans", fontSans.variable)}>
-          {children}
-          <Toaster richColors position="top-right" />
+          <QueryProvider>
+            {children}
+            <Toaster richColors position="top-right" />
+          </QueryProvider>
         </body>
       </html>
     </ClerkProvider>

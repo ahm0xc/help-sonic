@@ -46,3 +46,16 @@ export const subscriptionEvents = createTable("subscription_events", {
   eventPayload: jsonb("event_payload").notNull(),
   email: varchar("email", { length: 255 }).notNull(),
 });
+
+export const history = createTable("history", {
+  id: text("id").primaryKey().$defaultFn(generateId),
+
+  userId: text("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+
+  response: text("response").notNull(),
+  metadata: jsonb("metadata"),
+
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
