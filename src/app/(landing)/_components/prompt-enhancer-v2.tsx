@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { readStreamableValue } from "ai/rsc";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -27,7 +28,28 @@ import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
 import { generate, saveHistory } from "../_actions";
-import { useQuery } from "@tanstack/react-query";
+
+interface Data {
+  role: string | undefined;
+  documentType: string | undefined;
+  task: string | undefined;
+  format: string | undefined;
+  tone: string | undefined;
+  wordCount: string | undefined;
+  perspective: string | undefined;
+  keywords: string | undefined;
+  programmingLanguage: string | undefined;
+  projectDescription: string | undefined;
+  targetAudience: string | undefined;
+  isFaqIncluded: boolean;
+  isConclusionIncluded: boolean;
+  isSourcesIncluded: boolean;
+  isSeoBestPracticesIncluded: boolean;
+  age: string | undefined;
+  height: string | undefined;
+  weight: string | undefined;
+  fitnessLevel: string | undefined;
+}
 
 export default function PromptEnhancerV2() {
   const [selectedPromptFramework, setSelectedPromptFramework] = useState("RTF");
@@ -38,20 +60,7 @@ export default function PromptEnhancerV2() {
   const [isOutputLoading, setIsOutputLoading] = useState(false);
   const [output, setOutput] = useState("");
 
-  const [data, setData] = useState<{
-    role: string | undefined;
-    documentType: string | undefined;
-    task: string | undefined;
-    format: string | undefined;
-    tone: string | undefined;
-    wordCount: string | undefined;
-    perspective: string | undefined;
-    keywords: string | undefined;
-    isFaqIncluded: boolean;
-    isConclusionIncluded: boolean;
-    isSourcesIncluded: boolean;
-    isSeoBestPracticesIncluded: boolean;
-  }>({
+  const [data, setData] = useState<Data>({
     role: undefined,
     documentType: undefined,
     task: undefined,
@@ -60,10 +69,17 @@ export default function PromptEnhancerV2() {
     wordCount: undefined,
     perspective: undefined,
     keywords: undefined,
+    programmingLanguage: undefined,
+    projectDescription: undefined,
+    targetAudience: undefined,
     isFaqIncluded: false,
     isConclusionIncluded: false,
     isSourcesIncluded: false,
     isSeoBestPracticesIncluded: false,
+    age: undefined,
+    height: undefined,
+    weight: undefined,
+    fitnessLevel: undefined,
   });
 
   const { data: histories } = useQuery({
@@ -81,10 +97,17 @@ export default function PromptEnhancerV2() {
       wordCount: undefined,
       perspective: undefined,
       keywords: undefined,
+      programmingLanguage: undefined,
+      projectDescription: undefined,
+      targetAudience: undefined,
       isFaqIncluded: false,
       isConclusionIncluded: false,
       isSourcesIncluded: false,
       isSeoBestPracticesIncluded: false,
+      age: undefined,
+      height: undefined,
+      weight: undefined,
+      fitnessLevel: undefined,
     });
   }
 
@@ -98,16 +121,8 @@ export default function PromptEnhancerV2() {
             label: "Role",
             name: "role",
             placeholder: "Select role",
-            options: [
-              "Writer",
-              "Rewriter",
-              "SEO Writer",
-              "Coder",
-              "Social Media Manager",
-              "Email marketer",
-              "Copywriter",
-            ],
-            defaultValue: "Writer",
+            options: ["SEO Blog Writer", "Rewriter", "Coder", "Fitness Coach"],
+            defaultValue: "SEO Blog Writer",
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, role: value }));
             },
@@ -154,15 +169,25 @@ export default function PromptEnhancerV2() {
     {
       availableInFramework: ["RTF"],
       type: "select",
-      name: "Tone",
+      name: "Tone of voice",
       placeholder: "Select tone",
-      options: ["None", "Professional", "Casual", "Friendly", "Formal"],
-      defaultValue: "None",
+      options: [
+        "Auto",
+        "Conversation",
+        "Professional",
+        "Inspirational",
+        "Persuasive",
+        "Urgent",
+        "Bold",
+        "Empathetic",
+        "Minimalistic",
+      ],
+      defaultValue: "Auto",
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, tone: value }));
       },
-      isVisible: (data: Record<string, any>) => {
-        return true;
+      isVisible: () => {
+        return data.role === "SEO Blog Writer";
       },
     },
     {
@@ -170,45 +195,33 @@ export default function PromptEnhancerV2() {
       type: "select",
       name: "Word Count",
       placeholder: "Select word count",
-      options: [
-        "<100",
-        "100-200",
-        "200-300",
-        "300-400",
-        "400-500",
-        "500-600",
-        "600-700",
-        "700-800",
-        "800-900",
-        "900-1000",
-        ">1000",
-      ],
-      defaultValue: "200-300",
+      options: ["Auto", "600 - 1000", "1,300 - 1,800", "2,000 - 2,600"],
+      defaultValue: "Auto",
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, wordCount: value }));
       },
-      isVisible: (data: Record<string, any>) => {
-        return true;
+      isVisible: () => {
+        return data.role === "SEO Blog Writer" || data.role === "Rewriter";
       },
     },
     {
       availableInFramework: ["RTF"],
       type: "select",
       name: "Perspective",
-      placeholder: "Select word count",
+      placeholder: "Select Perspective",
       options: [
-        "None",
+        "Auto",
         "First Person singular (I, me)",
         "First Person plural (We, us)",
         "Second Person (You, your)",
         "Third Person (He, she)",
       ],
-      defaultValue: "None",
+      defaultValue: "Auto",
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, perspective: value }));
       },
-      isVisible: (data: Record<string, any>) => {
-        return true;
+      isVisible: () => {
+        return data.role === "SEO Blog Writer" || data.role === "Rewriter";
       },
     },
     {
@@ -220,8 +233,8 @@ export default function PromptEnhancerV2() {
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, keywords: value }));
       },
-      isVisible: (data: Record<string, any>) => {
-        return true;
+      isVisible: () => {
+        return data.role === "SEO Blog Writer";
       },
     },
     {
@@ -233,8 +246,8 @@ export default function PromptEnhancerV2() {
       onChange: (value: boolean) => {
         setData((prev) => ({ ...prev, isFaqIncluded: value }));
       },
-      isVisible: (data: Record<string, any>) => {
-        return true;
+      isVisible: () => {
+        return data.role === "SEO Blog Writer";
       },
     },
     {
@@ -246,8 +259,8 @@ export default function PromptEnhancerV2() {
       onChange: (value: boolean) => {
         setData((prev) => ({ ...prev, isConclusionIncluded: value }));
       },
-      isVisible: (data: Record<string, any>) => {
-        return true;
+      isVisible: () => {
+        return data.role === "SEO Blog Writer";
       },
     },
     {
@@ -259,8 +272,8 @@ export default function PromptEnhancerV2() {
       onChange: (value: boolean) => {
         setData((prev) => ({ ...prev, isSourcesIncluded: value }));
       },
-      isVisible: (data: Record<string, any>) => {
-        return true;
+      isVisible: () => {
+        return data.role === "SEO Blog Writer";
       },
     },
     {
@@ -272,8 +285,100 @@ export default function PromptEnhancerV2() {
       onChange: (value: boolean) => {
         setData((prev) => ({ ...prev, isSeoBestPracticesIncluded: value }));
       },
-      isVisible: (data: Record<string, any>) => {
-        return true;
+      isVisible: () => {
+        return data.role === "Rewriter";
+      },
+    },
+    {
+      availableInFramework: ["RTF"],
+      type: "text-input",
+      name: "Target Audience",
+      placeholder: "The audience you want to target",
+      defaultValue: "",
+      onChange: (value: string) => {
+        setData((prev) => ({ ...prev, targetAudience: value }));
+      },
+      isVisible: () => {
+        return data.role === "Rewriter";
+      },
+    },
+    {
+      availableInFramework: ["RTF"],
+      type: "text-input",
+      name: "Programming Language",
+      placeholder: "Python",
+      defaultValue: "",
+      onChange: (value: string) => {
+        setData((prev) => ({ ...prev, programmingLanguage: value }));
+      },
+      isVisible: () => {
+        return data.role === "Coder";
+      },
+    },
+    {
+      availableInFramework: ["RTF"],
+      type: "text-input",
+      name: "Project Description",
+      placeholder: "",
+      defaultValue: "",
+      onChange: (value: string) => {
+        setData((prev) => ({ ...prev, projectDescription: value }));
+      },
+      isVisible: () => {
+        return data.role === "Coder";
+      },
+    },
+    {
+      availableInFramework: ["RTF"],
+      type: "text-input",
+      name: "Age",
+      placeholder: "25",
+      defaultValue: "",
+      onChange: (value: string) => {
+        setData((prev) => ({ ...prev, age: value }));
+      },
+      isVisible: () => {
+        return data.role === "Fitness Coach";
+      },
+    },
+    {
+      availableInFramework: ["RTF"],
+      type: "text-input",
+      name: "Weight (KG)",
+      placeholder: "88",
+      defaultValue: "",
+      onChange: (value: string) => {
+        setData((prev) => ({ ...prev, weight: value }));
+      },
+      isVisible: () => {
+        return data.role === "Fitness Coach";
+      },
+    },
+    {
+      availableInFramework: ["RTF"],
+      type: "text-input",
+      name: "Height (cm)",
+      placeholder: "153",
+      defaultValue: "",
+      onChange: (value: string) => {
+        setData((prev) => ({ ...prev, height: value }));
+      },
+      isVisible: () => {
+        return data.role === "Fitness Coach";
+      },
+    },
+    {
+      availableInFramework: ["RTF"],
+      type: "select",
+      name: "Fitness Level",
+      placeholder: "Select Fitness Level",
+      options: ["None", "Beginner", "Intermediate", "Advanced"],
+      defaultValue: "None",
+      onChange: (value: string) => {
+        setData((prev) => ({ ...prev, fitnessLevel: value }));
+      },
+      isVisible: () => {
+        return data.role === "Fitness Coach";
       },
     },
   ];
@@ -289,12 +394,53 @@ export default function PromptEnhancerV2() {
         behavior: "smooth",
       });
 
+      const getRoleSpecificInstructions = (): string | undefined => {
+        if (data.role === "SEO Blog Writer") {
+          return `
+- research the topic {topic} thoroughly. (the topic comes from the field “Task”)
+- write an article optimized according to SEO best practice with {word count} words and with the main keyword {keyword} from the {perspective} Perspective.
+- add a conclusion to the article according to the 'INCLUDE CONCLUSION' parameter
+- formulate a FAQ with 5 questions and answers according to the 'INCLUDE FAQS' parameter
+- Below the text, place the links that you used as a source of information according to the 'INCLUDE SOURCES' parameter`;
+        }
+        if (data.role === "Rewriter") {
+          return `
+- Act as an experienced rewriter with a deep understanding of effective communication and audience engagement.
+- Ensure the rewritten text is tailored for the {Target Audience}.
+- Maintain the original meaning and intent while using alternative phrasing and sentence structures.
+- Adjust the tone of voice to be {Tone of Voice} and use the {perspective} perspective
+- Optimize the text according to SEO best practices, including the integration of relevant keywords according to the parameters
+- Improve the readability to ensure the text is clear and engaging for the intended audience.
+- Avoid any direct duplication of the original text to ensure uniqueness.`;
+        }
+        if (data.role === "Coder") {
+          return `
+- You are an experienced {Programming Language} developer tasked with creating a {project description, e.g., a management tool}. (the project description comes from the field “Task”)
+- Be modular and extendable so that additional features can be easily added in the future
+- Be modular and extendable so that additional features can be easily added in the future
+- Be optimized for readability and maintainability, adhering to best practices such as PEP 8
+- Include inline comments explaining each function and section of the code
+- Include inline comments explaining each function and section of the code`;
+        }
+        if (data.role === "Fitness Coach") {
+          return `
+- You are an expert fitness coach, and your task is to create a personalized fitness plan for a
+- {age}-year-old individual (according to the 'AGE' parameter)
+- who weighs {weight} kg (according to the 'WEIGHT' parameter)
+- is {height} cm tall (according to the 'HEIGHT' parameter)
+- and has a fitness level of {fitness level} (according to the 'FITNESS LEVEL' parameter)
+- The goal is to guide this individual toward a healthier lifestyle, improve their metabolism, and achieve a better overall fitness level.
+- The plan should include A weekly workout schedule with a balance of cardio, strength training, and flexibility exercises
+- A weekly workout schedule with a balance of cardio, strength training, and flexibility exercises
+- Recommendations for daily activities and habits that promote a healthier lifestyle`;
+        }
+      };
+
       const { output: outputStream } =
         await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
 
-        PROMPT PARAMETERS:
+        PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
         - ROLE NAME: ${data.role}
-        - ROLE DESCRIPTION: ${data.role}
         - TASK: ${data.task}
         - FORMAT: ${data.format}
         - TONE: ${data.tone}
@@ -302,6 +448,17 @@ export default function PromptEnhancerV2() {
         - WORD COUNT: ${data.wordCount}
         - PERSPECTIVE: ${data.perspective}
         - HUMANIZE RESPONSE: ${isHumanizeResponseEnabled}
+        - KEYWORDS: ${data.keywords}
+        - INCLUDE FAQS: ${data.isFaqIncluded}
+        - INCLUDE CONCLUSION: ${data.isConclusionIncluded}
+        - INCLUDE SOURCES: ${data.isSourcesIncluded}
+        - PROGRAMMING LANGUAGE: ${data.programmingLanguage}
+        - PROJECT DESCRIPTION: ${data.projectDescription}
+        - TARGET AUDIENCE: ${data.targetAudience}
+        - AGE: ${data.age}
+        - HEIGHT: ${data.height}
+        - WEIGHT: ${data.weight}
+        - FITNESS LEVEL: ${data.fitnessLevel}
 
         INSTRUCTIONS FOR PROMPT ENHANCER:
         - fix grammatical mistakes
@@ -311,6 +468,7 @@ export default function PromptEnhancerV2() {
         - use synonyms to make the prompt more readable
         - enhance the given prompt below and only return the enhanced prompt
         - don't generate responses on the enhanced prompt
+        ${getRoleSpecificInstructions()}
 
         PROMPT TO ENHANCE:
         ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
@@ -376,7 +534,10 @@ export default function PromptEnhancerV2() {
                   selectedPromptFramework === framework.name &&
                     "bg-blue-500 text-white",
                 )}
-                onClick={() => setSelectedPromptFramework(framework.name)}
+                onClick={() => {
+                  resetAllStates();
+                  setSelectedPromptFramework(framework.name);
+                }}
               >
                 {framework.name}
               </button>
@@ -485,6 +646,8 @@ export default function PromptEnhancerV2() {
                         {ADVANCED_OPTIONS.filter(
                           (opt) => opt.type !== "checkbox",
                         ).map((opt) => {
+                          if (!opt.isVisible()) return;
+
                           switch (opt.type) {
                             case "select": {
                               return (
@@ -540,6 +703,7 @@ export default function PromptEnhancerV2() {
                         {ADVANCED_OPTIONS.filter(
                           (opt) => opt.type === "checkbox",
                         ).map((opt) => {
+                          if (!opt.isVisible()) return;
                           return (
                             <div
                               aria-label="conclusion"
