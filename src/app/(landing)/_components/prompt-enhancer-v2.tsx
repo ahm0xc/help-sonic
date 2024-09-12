@@ -139,6 +139,11 @@ export default function PromptEnhancerV2() {
             },
           },
           {
+            type: "advance-options",
+            name: "advance-options",
+            onChange: () => {},
+          },
+          {
             type: "textarea",
             label: "Task",
             name: "task",
@@ -500,13 +505,12 @@ export default function PromptEnhancerV2() {
     const defaultData = {
       ...FRAMEWORKS.find(
         (f) => f.name === selectedPromptFramework,
-      )?.form.elements.reduce(
-        (acc, el) => ({
+      )?.form.elements.reduce((acc, el) => {
+        return {
           ...acc,
           [el.name]: el.defaultValue,
-        }),
-        {},
-      ),
+        };
+      }, {}),
       ...ADVANCED_OPTIONS.reduce(
         (acc, opt) => ({
           ...acc,
@@ -552,6 +556,131 @@ export default function PromptEnhancerV2() {
                     selectedPromptFramework.toLocaleLowerCase(),
                 )?.form.elements.map((el) => {
                   switch (el.type) {
+                    case "advance-options": {
+                      return (
+                        <div className="mt-4 col-span-2">
+                          <button
+                            type="button"
+                            className="text-sm text-blue-600 font-medium"
+                            onClick={() =>
+                              setIsAdvanceOptionsExpanded((prev) => !prev)
+                            }
+                          >
+                            Advance options{" "}
+                            <ChevronRightIcon
+                              className={cn(
+                                "w-4 h-4 inline-block",
+                                isAdvanceOptionsExpanded && "rotate-90",
+                              )}
+                            />
+                          </button>
+                          <div className="mt-4">
+                            {isAdvanceOptionsExpanded && (
+                              <div className="grid grid-cols-2 gap-4">
+                                {ADVANCED_OPTIONS.filter(
+                                  (opt) => opt.type !== "checkbox",
+                                ).map((opt) => {
+                                  if (!opt.isVisible()) return;
+
+                                  switch (opt.type) {
+                                    case "select": {
+                                      return (
+                                        <div
+                                          key={opt.name}
+                                          className="col-span-1 space-y-1.5"
+                                        >
+                                          <Label htmlFor={opt.name}>
+                                            {opt.name}
+                                          </Label>
+                                          <Select
+                                            defaultValue={
+                                              opt.defaultValue as string
+                                            }
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue
+                                                placeholder={opt.placeholder}
+                                              />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {opt.options?.map((option) => (
+                                                <SelectItem
+                                                  key={option}
+                                                  value={option}
+                                                >
+                                                  {option}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      );
+                                    }
+                                    case "text-input": {
+                                      return (
+                                        <div
+                                          key={opt.name}
+                                          className="col-span-2 space-y-1.5"
+                                        >
+                                          <Label htmlFor={opt.name}>
+                                            {opt.name}
+                                          </Label>
+                                          <Input
+                                            type={opt.type}
+                                            id={opt.name}
+                                            name={opt.name}
+                                            placeholder={opt.placeholder}
+                                            defaultValue={
+                                              opt.defaultValue as string
+                                            }
+                                          />
+                                        </div>
+                                      );
+                                    }
+                                    default:
+                                      return null;
+                                  }
+                                })}
+                              </div>
+                            )}
+                            {isAdvanceOptionsExpanded && (
+                              <div className="grid gap-3 mt-6">
+                                {ADVANCED_OPTIONS.filter(
+                                  (opt) => opt.type === "checkbox",
+                                ).map((opt) => {
+                                  if (!opt.isVisible()) return;
+                                  return (
+                                    <div
+                                      aria-label="conclusion"
+                                      className={cn(
+                                        "flex items-center space-x-2",
+                                      )}
+                                      key={opt.name}
+                                    >
+                                      <Checkbox
+                                        id={opt.name}
+                                        defaultChecked={
+                                          opt.defaultValue as boolean
+                                        }
+                                        onCheckedChange={(v) =>
+                                          opt.onChange(v as never)
+                                        }
+                                      />
+                                      <Label
+                                        htmlFor={opt.name}
+                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                      >
+                                        {opt.label}
+                                      </Label>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
                     case "select": {
                       return (
                         <div key={el.name} className="col-span-1">
@@ -625,110 +754,6 @@ export default function PromptEnhancerV2() {
                     Humanize response{" "}
                     <Badge variant="secondary">Recommended</Badge>
                   </Label>
-                </div>
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    className="text-sm text-blue-600 font-medium"
-                    onClick={() => setIsAdvanceOptionsExpanded((prev) => !prev)}
-                  >
-                    Advance options{" "}
-                    <ChevronRightIcon
-                      className={cn(
-                        "w-4 h-4 inline-block",
-                        isAdvanceOptionsExpanded && "rotate-90",
-                      )}
-                    />
-                  </button>
-                  <div className="mt-4">
-                    {isAdvanceOptionsExpanded && (
-                      <div className="grid grid-cols-2 gap-4">
-                        {ADVANCED_OPTIONS.filter(
-                          (opt) => opt.type !== "checkbox",
-                        ).map((opt) => {
-                          if (!opt.isVisible()) return;
-
-                          switch (opt.type) {
-                            case "select": {
-                              return (
-                                <div
-                                  key={opt.name}
-                                  className="col-span-1 space-y-1.5"
-                                >
-                                  <Label htmlFor={opt.name}>{opt.name}</Label>
-                                  <Select
-                                    defaultValue={opt.defaultValue as string}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue
-                                        placeholder={opt.placeholder}
-                                      />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {opt.options?.map((option) => (
-                                        <SelectItem key={option} value={option}>
-                                          {option}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              );
-                            }
-                            case "text-input": {
-                              return (
-                                <div
-                                  key={opt.name}
-                                  className="col-span-2 space-y-1.5"
-                                >
-                                  <Label htmlFor={opt.name}>{opt.name}</Label>
-                                  <Input
-                                    type={opt.type}
-                                    id={opt.name}
-                                    name={opt.name}
-                                    placeholder={opt.placeholder}
-                                    defaultValue={opt.defaultValue as string}
-                                  />
-                                </div>
-                              );
-                            }
-                            default:
-                              return null;
-                          }
-                        })}
-                      </div>
-                    )}
-                    {isAdvanceOptionsExpanded && (
-                      <div className="grid gap-3 mt-6">
-                        {ADVANCED_OPTIONS.filter(
-                          (opt) => opt.type === "checkbox",
-                        ).map((opt) => {
-                          if (!opt.isVisible()) return;
-                          return (
-                            <div
-                              aria-label="conclusion"
-                              className={cn("flex items-center space-x-2")}
-                              key={opt.name}
-                            >
-                              <Checkbox
-                                id={opt.name}
-                                defaultChecked={opt.defaultValue as boolean}
-                                onCheckedChange={(v) =>
-                                  opt.onChange(v as never)
-                                }
-                              />
-                              <Label
-                                htmlFor={opt.name}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                {opt.label}
-                              </Label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
               <div className="mt-4">
