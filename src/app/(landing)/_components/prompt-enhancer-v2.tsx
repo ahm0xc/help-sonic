@@ -53,6 +53,9 @@ interface Data {
   fitnessLevel: string | undefined;
   action: string | undefined;
   goal: string | undefined;
+  context: string | undefined;
+  result: string | undefined;
+  example: string | undefined;
 }
 
 export default function PromptEnhancerV2() {
@@ -86,6 +89,9 @@ export default function PromptEnhancerV2() {
     fitnessLevel: undefined,
     action: undefined,
     goal: undefined,
+    context: undefined,
+    result: undefined,
+    example: undefined,
   });
 
   const { data: histories } = useQuery({
@@ -118,6 +124,9 @@ export default function PromptEnhancerV2() {
       fitnessLevel: undefined,
       action: undefined,
       goal: undefined,
+      context: undefined,
+      result: undefined,
+      example: undefined,
     });
   }
 
@@ -210,6 +219,63 @@ export default function PromptEnhancerV2() {
             label: "Goal",
             name: "goal",
             placeholder: "",
+            minRows: 3,
+            onChange: (value: string) => {
+              setData((prev) => ({ ...prev, goal: value }));
+            },
+            required: true,
+          },
+        ],
+      },
+    },
+    {
+      name: "CARE",
+      form: {
+        elements: [
+          {
+            availableInFramework: ["CARE"],
+            type: "textarea",
+            label: "Context",
+            name: "context",
+            placeholder: "We are launching a new line of sustainable clothing",
+            minRows: 3,
+            onChange: (value: string) => {
+              setData((prev) => ({ ...prev, context: value }));
+            },
+            required: true,
+          },
+          {
+            availableInFramework: ["CARE"],
+            type: "text-input",
+            label: "Action",
+            name: "action",
+            placeholder:
+              "Can you assist us in creating a targeted advertising campaign that emphasizes our environmental commitment",
+            defaultValue: "",
+            onChange: (value: string) => {
+              setData((prev) => ({ ...prev, action: value }));
+            },
+            required: true,
+          },
+          {
+            availableInFramework: ["CARE"],
+            type: "textarea",
+            label: "Result",
+            name: "result",
+            placeholder:
+              "Our desired outcome is to drive product awaroness and sales, A good example of a similar successful initiative is Patagonia's",
+            minRows: 3,
+            onChange: (value: string) => {
+              setData((prev) => ({ ...prev, action: value }));
+            },
+          },
+          {
+            availableInFramework: ["CARE"],
+            type: "textarea",
+            label: "Example",
+            name: "example",
+            placeholder:
+              "Don't Buy This Jackot campaign, which highlighted their commitment to sustainability while enhancing their brand imago.",
             minRows: 3,
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, goal: value }));
@@ -545,6 +611,30 @@ INSTRUCTIONS FOR PROMPT ENHANCER:
 - The task is to evaluate the performance of team members
 - Act as a Direct manager and assess the strengths and weaknesses of team members.
 - Goal is to improve team performance so that the average user satisfaction score moves from 6 to 7.5 in the next quarter.
+- fix grammatical mistakes
+- only return the prompt
+- if any parameter is not specified, ignore the line
+- change the prompt so that it doesn't look always the same but keep the core meaning
+- use synonyms to make the prompt more readable
+- enhance the given prompt below and only return the enhanced prompt
+- don't generate responses on the enhanced prompt
+
+PROMPT TO ENHANCE (replace the variables with {} with the corresponding parameters):
+${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
+`);
+
+        outputStream = output;
+      }
+      if (selectedPromptFramework.toLowerCase() === "care") {
+        const { output } =
+          await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
+PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
+- context: ${data.context}
+- action: ${data.action}
+- result: ${data.result}
+- example: ${data.example}
+
+INSTRUCTIONS FOR PROMPT ENHANCER:
 - fix grammatical mistakes
 - only return the prompt
 - if any parameter is not specified, ignore the line
@@ -965,5 +1055,8 @@ const PROMPTS = {
   },
   tag: {
     prompt: `You are a proficient strategist in {task}. Your job is to {action}, with the goal of {goal}. Use the most relevant and current information to provide a thorough and accurate response. Ensure clarity and thoroughness in your output.`,
+  },
+  care: {
+    prompt: `You are a {role}, skilled in your domain. Your task is to {task}, ensuring high-quality content that is accurate, clear, and relevant. Deliver the output in {format}, ensuring that it meets the highest standards. For instance, when asked to {specific task}, your response should be detailed yet concise.`,
   },
 };
