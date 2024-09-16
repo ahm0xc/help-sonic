@@ -8,7 +8,7 @@ import {
   CopyIcon,
   SparklesIcon,
 } from "lucide-react";
-import { readStreamableValue } from "ai/rsc";
+import { readStreamableValue, StreamableValue } from "ai/rsc";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 
@@ -28,6 +28,8 @@ import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
 import { generate, saveHistory } from "../_actions";
+import useUserSubscription from "~/hooks/use-user-subscription";
+import Link from "next/link";
 
 interface Data {
   role: string | undefined;
@@ -49,6 +51,8 @@ interface Data {
   height: string | undefined;
   weight: string | undefined;
   fitnessLevel: string | undefined;
+  action: string | undefined;
+  goal: string | undefined;
 }
 
 export default function PromptEnhancerV2() {
@@ -80,12 +84,16 @@ export default function PromptEnhancerV2() {
     height: undefined,
     weight: undefined,
     fitnessLevel: undefined,
+    action: undefined,
+    goal: undefined,
   });
 
   const { data: histories } = useQuery({
     queryKey: ["histories"],
     queryFn: () => fetch("/api/history").then((res) => res.json()),
   });
+
+  const userSubscriptionQuery = useUserSubscription();
 
   function resetAllStates() {
     setData({
@@ -108,6 +116,8 @@ export default function PromptEnhancerV2() {
       height: undefined,
       weight: undefined,
       fitnessLevel: undefined,
+      action: undefined,
+      goal: undefined,
     });
   }
 
@@ -164,6 +174,47 @@ export default function PromptEnhancerV2() {
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, format: value }));
             },
+          },
+        ],
+      },
+    },
+    {
+      name: "TAG",
+      form: {
+        elements: [
+          {
+            availableInFramework: ["TAG"],
+            type: "text-input",
+            label: "Task",
+            name: "Task",
+            placeholder: "Task",
+            defaultValue: "",
+            onChange: (value: string) => {
+              setData((prev) => ({ ...prev, task: value }));
+            },
+            required: true,
+          },
+          {
+            type: "textarea",
+            label: "Action",
+            name: "action",
+            placeholder: "",
+            minRows: 3,
+            onChange: (value: string) => {
+              setData((prev) => ({ ...prev, action: value }));
+            },
+            required: true,
+          },
+          {
+            type: "textarea",
+            label: "Goal",
+            name: "goal",
+            placeholder: "",
+            minRows: 3,
+            onChange: (value: string) => {
+              setData((prev) => ({ ...prev, goal: value }));
+            },
+            required: true,
           },
         ],
       },
@@ -399,17 +450,20 @@ export default function PromptEnhancerV2() {
         behavior: "smooth",
       });
 
-      const getRoleSpecificInstructions = (): string | undefined => {
-        if (data.role === "SEO Blog Writer") {
-          return `
+      let outputStream: StreamableValue<string, any> | null = null;
+
+      if (selectedPromptFramework.toLowerCase() === "rtf") {
+        const getRoleSpecificInstructions = (): string | undefined => {
+          if (data.role === "SEO Blog Writer") {
+            return `
 - research the topic {topic} thoroughly. (the topic comes from the field “Task”)
 - write an article optimized according to SEO best practice with {word count} words and with the main keyword {keyword} from the {perspective} Perspective.
 - add a conclusion to the article according to the 'INCLUDE CONCLUSION' parameter
 - formulate a FAQ with 5 questions and answers according to the 'INCLUDE FAQS' parameter
 - Below the text, place the links that you used as a source of information according to the 'INCLUDE SOURCES' parameter`;
-        }
-        if (data.role === "Rewriter") {
-          return `
+          }
+          if (data.role === "Rewriter") {
+            return `
 - Act as an experienced rewriter with a deep understanding of effective communication and audience engagement.
 - Ensure the rewritten text is tailored for the {Target Audience}.
 - Maintain the original meaning and intent while using alternative phrasing and sentence structures.
@@ -417,18 +471,18 @@ export default function PromptEnhancerV2() {
 - Optimize the text according to SEO best practices, including the integration of relevant keywords according to the parameters
 - Improve the readability to ensure the text is clear and engaging for the intended audience.
 - Avoid any direct duplication of the original text to ensure uniqueness.`;
-        }
-        if (data.role === "Coder") {
-          return `
+          }
+          if (data.role === "Coder") {
+            return `
 - You are an experienced {Programming Language} developer tasked with creating a {project description, e.g., a management tool}. (the project description comes from the field “Task”)
 - Be modular and extendable so that additional features can be easily added in the future
 - Be modular and extendable so that additional features can be easily added in the future
 - Be optimized for readability and maintainability, adhering to best practices such as PEP 8
 - Include inline comments explaining each function and section of the code
 - Include inline comments explaining each function and section of the code`;
-        }
-        if (data.role === "Fitness Coach") {
-          return `
+          }
+          if (data.role === "Fitness Coach") {
+            return `
 - You are an expert fitness coach, and your task is to create a personalized fitness plan for a
 - {age}-year-old individual (according to the 'AGE' parameter)
 - who weighs {weight} kg (according to the 'WEIGHT' parameter)
@@ -438,11 +492,11 @@ export default function PromptEnhancerV2() {
 - The plan should include A weekly workout schedule with a balance of cardio, strength training, and flexibility exercises
 - A weekly workout schedule with a balance of cardio, strength training, and flexibility exercises
 - Recommendations for daily activities and habits that promote a healthier lifestyle`;
-        }
-      };
+          }
+        };
 
-      const { output: outputStream } =
-        await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
+        const { output } =
+          await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
 
         PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
         - ROLE NAME: ${data.role}
@@ -476,8 +530,40 @@ export default function PromptEnhancerV2() {
         ${getRoleSpecificInstructions()}
 
         PROMPT TO ENHANCE:
-        ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
-        `);
+        ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}`);
+        outputStream = output;
+      }
+      if (selectedPromptFramework.toLowerCase() === "tag") {
+        const { output } =
+          await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
+PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
+- task: ${data.task}
+- action: ${data.action}
+- goal: ${data.goal}
+
+INSTRUCTIONS FOR PROMPT ENHANCER:
+- The task is to evaluate the performance of team members
+- Act as a Direct manager and assess the strengths and weaknesses of team members.
+- Goal is to improve team performance so that the average user satisfaction score moves from 6 to 7.5 in the next quarter.
+- fix grammatical mistakes
+- only return the prompt
+- if any parameter is not specified, ignore the line
+- change the prompt so that it doesn't look always the same but keep the core meaning
+- use synonyms to make the prompt more readable
+- enhance the given prompt below and only return the enhanced prompt
+- don't generate responses on the enhanced prompt
+
+PROMPT TO ENHANCE (replace the variables with {} with the corresponding parameters):
+${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
+`);
+
+        outputStream = output;
+      }
+
+      if (!outputStream) {
+        console.log("No output stream");
+        return;
+      }
 
       let INTERNAL_output = "";
 
@@ -524,6 +610,20 @@ export default function PromptEnhancerV2() {
 
   return (
     <div className="container max-w-7xl scroll-m-10" id="prompt-enhancer">
+      {!userSubscriptionQuery?.data?.isSubscribed &&
+        !userSubscriptionQuery.isLoading && (
+          <div>
+            <div className="m-3 bg-blue-50 border border-blue-100 p-6 rounded-xl space-y-2">
+              <h4 className="text-lg font-medium text-blue-600">⚠️ Alert</h4>
+              <p className="text-blue-800">
+                Subscribe to any of the available plan to start using Help Sonic
+              </p>
+              <Button asChild className="bg-blue-600 hover:bg-blue-500">
+                <Link href="/pricing">Check Plans</Link>
+              </Button>
+            </div>
+          </div>
+        )}
       <div className="grid grid-cols-2 gap-10 shadow-lg rounded-3xl p-8 border bg-background">
         <section>
           <div>
@@ -697,6 +797,7 @@ export default function PromptEnhancerV2() {
                               <SelectValue placeholder={el.placeholder} />
                             </SelectTrigger>
                             <SelectContent>
+                              {/* @ts-expect-error */}
                               {el.options?.map((option) => (
                                 <SelectItem key={option} value={option}>
                                   {option}
@@ -861,5 +962,8 @@ function OutputCard({
 const PROMPTS = {
   rtf: {
     prompt: `Act as {Role}, now your task will be {Task} and the content you generate should be in {format/document type}, writing tone will be {tone} and {humanizer/"make sure the copy you generate it should be 8th grade English catagories and do aim for simpler adverbs, and adverbial phrases professional tone"} the {document} you will generate word count should be around {wordcount} and the writing perspective {perspective}`,
+  },
+  tag: {
+    prompt: `You are a proficient strategist in {task}. Your job is to {action}, with the goal of {goal}. Use the most relevant and current information to provide a thorough and accurate response. Ensure clarity and thoroughness in your output.`,
   },
 };
