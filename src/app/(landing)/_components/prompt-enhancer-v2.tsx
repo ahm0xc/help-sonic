@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import {
   ChevronRightIcon,
@@ -11,6 +11,7 @@ import {
 import { readStreamableValue, StreamableValue } from "ai/rsc";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -29,7 +30,13 @@ import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
 import { generate, saveHistory } from "../_actions";
 import useUserSubscription from "~/hooks/use-user-subscription";
-import Link from "next/link";
+
+const PREDEFINED_ROLES = [
+  "SEO Blog Writer",
+  "Rewriter",
+  "Coder",
+  "Fitness Coach",
+];
 
 interface Data {
   role: string | undefined;
@@ -64,11 +71,12 @@ export default function PromptEnhancerV2() {
     useState(true);
   const [isAdvanceOptionsExpanded, setIsAdvanceOptionsExpanded] =
     useState(false);
+  const [isUsingCustomRole, setIsUsingCustomRole] = useState(false);
   const [isOutputLoading, setIsOutputLoading] = useState(false);
   const [output, setOutput] = useState("");
 
   const [data, setData] = useState<Data>({
-    role: undefined,
+    role: PREDEFINED_ROLES[0],
     documentType: undefined,
     task: undefined,
     format: undefined,
@@ -94,6 +102,8 @@ export default function PromptEnhancerV2() {
     example: undefined,
   });
 
+  const roleInputRef = useRef<HTMLInputElement>(null);
+
   const { data: histories } = useQuery({
     queryKey: ["histories"],
     queryFn: () => fetch("/api/history").then((res) => res.json()),
@@ -103,7 +113,7 @@ export default function PromptEnhancerV2() {
 
   function resetAllStates() {
     setData({
-      role: undefined,
+      role: PREDEFINED_ROLES[0],
       documentType: undefined,
       task: undefined,
       format: undefined,
@@ -135,17 +145,17 @@ export default function PromptEnhancerV2() {
       name: "RTF",
       form: {
         elements: [
-          {
-            type: "select",
-            label: "Role",
-            name: "role",
-            placeholder: "Select role",
-            options: ["SEO Blog Writer", "Rewriter", "Coder", "Fitness Coach"],
-            defaultValue: "SEO Blog Writer",
-            onChange: (value: string) => {
-              setData((prev) => ({ ...prev, role: value }));
-            },
-          },
+          // {
+          //   type: "select",
+          //   label: "Role",
+          //   name: "role",
+          //   placeholder: "Select role",
+          //   options: ["SEO Blog Writer", "Rewriter", "Coder", "Fitness Coach"],
+          //   defaultValue: "SEO Blog Writer",
+          //   onChange: (value: string) => {
+          //     setData((prev) => ({ ...prev, role: value }));
+          //   },
+          // },
           {
             type: "select",
             label: "Document Type",
@@ -309,7 +319,7 @@ export default function PromptEnhancerV2() {
         setData((prev) => ({ ...prev, tone: value }));
       },
       isVisible: () => {
-        return data.role === "SEO Blog Writer";
+        return data.role === "SEO Blog Writer" || isUsingCustomRole;
       },
     },
     {
@@ -323,7 +333,11 @@ export default function PromptEnhancerV2() {
         setData((prev) => ({ ...prev, wordCount: value }));
       },
       isVisible: () => {
-        return data.role === "SEO Blog Writer" || data.role === "Rewriter";
+        return (
+          data.role === "SEO Blog Writer" ||
+          data.role === "Rewriter" ||
+          isUsingCustomRole
+        );
       },
     },
     {
@@ -343,7 +357,11 @@ export default function PromptEnhancerV2() {
         setData((prev) => ({ ...prev, perspective: value }));
       },
       isVisible: () => {
-        return data.role === "SEO Blog Writer" || data.role === "Rewriter";
+        return (
+          data.role === "SEO Blog Writer" ||
+          data.role === "Rewriter" ||
+          isUsingCustomRole
+        );
       },
     },
     {
@@ -356,7 +374,7 @@ export default function PromptEnhancerV2() {
         setData((prev) => ({ ...prev, keywords: value }));
       },
       isVisible: () => {
-        return data.role === "SEO Blog Writer";
+        return data.role === "SEO Blog Writer" || isUsingCustomRole;
       },
     },
     {
@@ -369,7 +387,7 @@ export default function PromptEnhancerV2() {
         setData((prev) => ({ ...prev, isFaqIncluded: value }));
       },
       isVisible: () => {
-        return data.role === "SEO Blog Writer";
+        return data.role === "SEO Blog Writer" || isUsingCustomRole;
       },
     },
     {
@@ -382,7 +400,7 @@ export default function PromptEnhancerV2() {
         setData((prev) => ({ ...prev, isConclusionIncluded: value }));
       },
       isVisible: () => {
-        return data.role === "SEO Blog Writer";
+        return data.role === "SEO Blog Writer" || isUsingCustomRole;
       },
     },
     {
@@ -408,7 +426,7 @@ export default function PromptEnhancerV2() {
         setData((prev) => ({ ...prev, isSeoBestPracticesIncluded: value }));
       },
       isVisible: () => {
-        return data.role === "Rewriter";
+        return data.role === "Rewriter" || isUsingCustomRole;
       },
     },
     {
@@ -687,10 +705,11 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
     resetAllStates();
     const defaultData = {
       ...FRAMEWORKS.find(
-        (f) => f.name === selectedPromptFramework,
+        (f) => f.name === selectedPromptFramework
       )?.form.elements.reduce((acc, el) => {
         return {
           ...acc,
+          // @ts-expect-error
           [el.name]: el.defaultValue,
         };
       }, {}),
@@ -699,7 +718,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
           ...acc,
           [opt.name.toLowerCase().replace(/\s/g, "")]: opt.defaultValue,
         }),
-        {},
+        {}
       ),
     };
     setData(defaultData as any);
@@ -733,7 +752,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                 className={cn(
                   "bg-secondary text-base px-3 py-1 font-medium rounded-full",
                   selectedPromptFramework === framework.name &&
-                    "bg-blue-500 text-white",
+                    "bg-blue-500 text-white"
                 )}
                 onClick={() => {
                   resetAllStates();
@@ -747,10 +766,98 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
           <div className="mt-6">
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-4">
+                {/* custom fields */}
+                {selectedPromptFramework === "RTF" && (
+                  <div className="flex flex-col gap-2">
+                    {isUsingCustomRole ? (
+                      <>
+                        {" "}
+                        <Label htmlFor="role">Role</Label>
+                        <Input
+                          type="text"
+                          id="role"
+                          name="role"
+                          placeholder="Facebook ad manager"
+                          autoComplete="off"
+                          value={data.role}
+                          onChange={(e) =>
+                            setData((prev) => ({
+                              ...prev,
+                              role: e.target.value,
+                            }))
+                          }
+                          ref={roleInputRef}
+                          required
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <Label htmlFor="role">Role</Label>
+                        <Select
+                          defaultValue={PREDEFINED_ROLES[0]}
+                          required
+                          onValueChange={(v) =>
+                            setData((prev) => ({
+                              ...prev,
+                              role: v,
+                            }))
+                          }
+                        >
+                          <SelectTrigger
+                            name="role"
+                            id="role"
+                            className="w-full !min-w-full"
+                          >
+                            <SelectValue
+                              placeholder="Role"
+                              className="w-full"
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PREDEFINED_ROLES.map((role) => (
+                              <SelectItem
+                                key={`predefined-role//${role}`}
+                                value={role}
+                              >
+                                {role}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </>
+                    )}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="custom-role-checkbox"
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setIsUsingCustomRole(true);
+                            setData((prev) => ({ ...prev, role: "" }));
+                            setTimeout(() => {
+                              roleInputRef.current?.focus();
+                            }, 100);
+                          } else {
+                            setData((prev) => ({
+                              ...prev,
+                              role: PREDEFINED_ROLES[0],
+                            }));
+                            setIsUsingCustomRole(false);
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor="custom-role-checkbox"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Use custom role
+                      </label>
+                    </div>
+                  </div>
+                )}
                 {FRAMEWORKS.find(
                   (frm) =>
                     frm.name.toLowerCase() ===
-                    selectedPromptFramework.toLocaleLowerCase(),
+                    selectedPromptFramework.toLowerCase()
                 )?.form.elements.map((el) => {
                   switch (el.type) {
                     case "advance-options": {
@@ -767,7 +874,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                             <ChevronRightIcon
                               className={cn(
                                 "w-4 h-4 inline-block",
-                                isAdvanceOptionsExpanded && "rotate-90",
+                                isAdvanceOptionsExpanded && "rotate-90"
                               )}
                             />
                           </button>
@@ -775,7 +882,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                             {isAdvanceOptionsExpanded && (
                               <div className="grid grid-cols-2 gap-4">
                                 {ADVANCED_OPTIONS.filter(
-                                  (opt) => opt.type !== "checkbox",
+                                  (opt) => opt.type !== "checkbox"
                                 ).map((opt) => {
                                   if (!opt.isVisible()) return;
 
@@ -835,7 +942,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                                             }
                                             onChange={(e) =>
                                               opt.onChange(
-                                                e.target.value as never,
+                                                e.target.value as never
                                               )
                                             }
                                           />
@@ -851,14 +958,14 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                             {isAdvanceOptionsExpanded && (
                               <div className="grid gap-3 mt-6">
                                 {ADVANCED_OPTIONS.filter(
-                                  (opt) => opt.type === "checkbox",
+                                  (opt) => opt.type === "checkbox"
                                 ).map((opt) => {
                                   if (!opt.isVisible()) return;
                                   return (
                                     <div
                                       aria-label="conclusion"
                                       className={cn(
-                                        "flex items-center space-x-2",
+                                        "flex items-center space-x-2"
                                       )}
                                       key={opt.name}
                                     >
@@ -1003,7 +1110,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
             )}
             {output &&
               !histories.some(
-                (history: any) => history.response === output,
+                (history: any) => history.response === output
               ) && (
                 <OutputCard
                   output={output}
@@ -1040,7 +1147,7 @@ function OutputCard({
     <div
       className={cn(
         "p-5 group rounded-xl bg-secondary/50 border text-[15px] relative",
-        className,
+        className
       )}
     >
       <div className="">{output}</div>
