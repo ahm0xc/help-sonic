@@ -159,8 +159,8 @@ export default function PromptEnhancerV2() {
           },
           {
             type: "advance-options",
-            name: "advance-options",
-            onChange: () => {},
+            // name: "advance-options",
+            // onChange: () => {},
           },
           {
             type: "textarea",
@@ -508,6 +508,10 @@ export default function PromptEnhancerV2() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    // console.log(data);
+
+    // return;
+
     try {
       setOutput("");
       setIsOutputLoading(true);
@@ -564,39 +568,40 @@ export default function PromptEnhancerV2() {
         const { output } =
           await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
 
-        PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
-        - ROLE NAME: ${data.role}
-        - TASK: ${data.task}
-        - FORMAT: ${data.format}
-        - TONE: ${data.tone}
-        - DOCUMENT TYPE: ${data.documentType}
-        - WORD COUNT: ${data.wordCount}
-        - PERSPECTIVE: ${data.perspective}
-        - HUMANIZE RESPONSE: ${isHumanizeResponseEnabled}
-        - KEYWORDS: ${data.keywords}
-        - INCLUDE FAQS: ${data.isFaqIncluded}
-        - INCLUDE CONCLUSION: ${data.isConclusionIncluded}
-        - INCLUDE SOURCES: ${data.isSourcesIncluded}
-        - PROGRAMMING LANGUAGE: ${data.programmingLanguage}
-        - PROJECT DESCRIPTION: ${data.projectDescription}
-        - TARGET AUDIENCE: ${data.targetAudience}
-        - AGE: ${data.age}
-        - HEIGHT: ${data.height}
-        - WEIGHT: ${data.weight}
-        - FITNESS LEVEL: ${data.fitnessLevel}
+PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
+- ROLE NAME: ${data.role}
+- TASK: ${data.task}
+- FORMAT: ${data.format}
+- TONE: ${data.tone}
+- DOCUMENT TYPE: ${data.documentType}
+- WORD COUNT: ${data.wordCount}
+- PERSPECTIVE: ${data.perspective}
+- HUMANIZE RESPONSE: ${isHumanizeResponseEnabled}
+- KEYWORDS: ${data.keywords}
+- INCLUDE FAQS: ${data.isFaqIncluded}
+- INCLUDE CONCLUSION: ${data.isConclusionIncluded}
+- INCLUDE SOURCES: ${data.isSourcesIncluded}
+- PROGRAMMING LANGUAGE: ${data.programmingLanguage}
+- PROJECT DESCRIPTION: ${data.projectDescription}
+- TARGET AUDIENCE: ${data.targetAudience}
+- AGE: ${data.age}
+- HEIGHT: ${data.height}
+- WEIGHT: ${data.weight}
+- FITNESS LEVEL: ${data.fitnessLevel}
 
-        INSTRUCTIONS FOR PROMPT ENHANCER:
-        - fix grammatical mistakes
-        - only return the prompt
-        - if any parameter is not specified, ignore the line
-        - change the prompt so that it doesn't look always the same but keep the core meaning
-        - use synonyms to make the prompt more readable
-        - enhance the given prompt below and only return the enhanced prompt
-        - don't generate responses on the enhanced prompt
-        ${getRoleSpecificInstructions()}
+INSTRUCTIONS FOR PROMPT ENHANCER:
+- MUST: include all the defined parameters in the enhanced prompt as commands
+- fix grammatical mistakes
+- only return the prompt
+- if any parameter is not specified, ignore the line
+- change the prompt so that it doesn't look always the same but keep the core meaning
+- use synonyms to make the prompt more readable
+- enhance the given prompt below and only return the enhanced prompt
+- don't generate responses on the enhanced prompt
+${getRoleSpecificInstructions()}
 
-        PROMPT TO ENHANCE:
-        ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}`);
+PROMPT TO ENHANCE:
+${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}`);
         outputStream = output;
       }
       if (selectedPromptFramework.toLowerCase() === "tag") {
@@ -608,6 +613,7 @@ PROMPT PARAMETERS (take only the ones that are defined and necessary for the pro
 - goal: ${data.goal}
 
 INSTRUCTIONS FOR PROMPT ENHANCER:
+- MUST: include all the defined parameters in the enhanced prompt as commands
 - The task is to evaluate the performance of team members
 - Act as a Direct manager and assess the strengths and weaknesses of team members.
 - Goal is to improve team performance so that the average user satisfaction score moves from 6 to 7.5 in the next quarter.
@@ -635,6 +641,7 @@ PROMPT PARAMETERS (take only the ones that are defined and necessary for the pro
 - example: ${data.example}
 
 INSTRUCTIONS FOR PROMPT ENHANCER:
+- MUST: include all the defined parameters in the enhanced prompt as commands
 - fix grammatical mistakes
 - only return the prompt
 - if any parameter is not specified, ignore the line
@@ -786,6 +793,9 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                                             defaultValue={
                                               opt.defaultValue as string
                                             }
+                                            onValueChange={(v) =>
+                                              opt.onChange(v as never)
+                                            }
                                           >
                                             <SelectTrigger>
                                               <SelectValue
@@ -822,6 +832,11 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                                             placeholder={opt.placeholder}
                                             defaultValue={
                                               opt.defaultValue as string
+                                            }
+                                            onChange={(e) =>
+                                              opt.onChange(
+                                                e.target.value as never,
+                                              )
                                             }
                                           />
                                         </div>
@@ -1051,7 +1066,7 @@ function OutputCard({
 
 const PROMPTS = {
   rtf: {
-    prompt: `Act as {Role}, now your task will be {Task} and the content you generate should be in {format/document type}, writing tone will be {tone} and {humanizer/"make sure the copy you generate it should be 8th grade English catagories and do aim for simpler adverbs, and adverbial phrases professional tone"} the {document} you will generate word count should be around {wordcount} and the writing perspective {perspective}`,
+    prompt: `Act as {Role}, now your task will be {Task} and the content you generate should be in {format}.`,
   },
   tag: {
     prompt: `You are a proficient strategist in {task}. Your job is to {action}, with the goal of {goal}. Use the most relevant and current information to provide a thorough and accurate response. Ensure clarity and thoroughness in your output.`,

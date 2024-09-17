@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import Image from "next/image";
 
 import { Button } from "~/components/ui/button";
 
@@ -7,8 +8,7 @@ function Header() {
   return (
     <header className="flex justify-between items-center p-4 container">
       <Link href="/">
-        {/* <Image src="/logo.png" alt="Helpsonic" width={150} height={40} /> */}
-        <h1 className="text-2xl font-bold">Helpsonic</h1>
+        <Image src="/logo.png" alt="Helpsonic" width={150} height={40} />
       </Link>
       <nav className="flex items-center">
         <div className="flex items-center gap-6 mr-10">
