@@ -36,6 +36,7 @@ const PREDEFINED_ROLES = [
   "Rewriter",
   "Coder",
   "Fitness Coach",
+  "None"
 ];
 
 interface Data {
