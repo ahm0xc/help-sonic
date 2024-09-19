@@ -12,6 +12,7 @@ import { readStreamableValue, StreamableValue } from "ai/rsc";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { Info } from "@phosphor-icons/react";
 
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -30,13 +31,18 @@ import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
 import { generate, saveHistory } from "../_actions";
 import useUserSubscription from "~/hooks/use-user-subscription";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 
 const PREDEFINED_ROLES = [
   "SEO Blog Writer",
   "Rewriter",
   "Coder",
   "Fitness Coach",
-  "None"
+  "None",
 ];
 
 interface Data {
@@ -144,6 +150,8 @@ export default function PromptEnhancerV2() {
   const FRAMEWORKS = [
     {
       name: "RTF",
+      description:
+        "The RTF Prompt Framework (Role-Task-Format) is a structured approach for creating effective AI prompts, especially useful for developers and content creators.",
       form: {
         elements: [
           // {
@@ -200,6 +208,8 @@ export default function PromptEnhancerV2() {
     },
     {
       name: "TAG",
+      description:
+        "The TAG Prompt Framework emphasizes Task, Action, and Goal, ensuring that the prompt is well-defined and targeted for optimal results.",
       form: {
         elements: [
           {
@@ -241,6 +251,8 @@ export default function PromptEnhancerV2() {
     },
     {
       name: "CARE",
+      description:
+        "The CARE prompt framework stands for Context, Action, Role, and Example—four key elements that guide the model in producing more accurate and relevant responses.",
       form: {
         elements: [
           {
@@ -706,7 +718,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
     resetAllStates();
     const defaultData = {
       ...FRAMEWORKS.find(
-        (f) => f.name === selectedPromptFramework
+        (f) => f.name === selectedPromptFramework,
       )?.form.elements.reduce((acc, el) => {
         return {
           ...acc,
@@ -719,7 +731,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
           ...acc,
           [opt.name.toLowerCase().replace(/\s/g, "")]: opt.defaultValue,
         }),
-        {}
+        {},
       ),
     };
     setData(defaultData as any);
@@ -746,23 +758,54 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
           <div>
             <h4 className="text-xl font-bold">Choose prompt Enhancer</h4>
           </div>
-          <div className="flex flex-row gap-4 mt-6">
-            {FRAMEWORKS.map((framework) => (
-              <button
-                key={framework.name}
-                className={cn(
-                  "bg-secondary text-base px-3 py-1 font-medium rounded-full",
-                  selectedPromptFramework === framework.name &&
-                    "bg-blue-500 text-white"
-                )}
-                onClick={() => {
-                  resetAllStates();
-                  setSelectedPromptFramework(framework.name);
-                }}
-              >
-                {framework.name}
-              </button>
-            ))}
+          <div className="flex items-center justify-between">
+            <div className="flex flex-row gap-4 mt-6">
+              {FRAMEWORKS.map((framework) => (
+                <button
+                  key={framework.name}
+                  className={cn(
+                    "bg-secondary text-base px-3 py-1 font-medium rounded-full",
+                    selectedPromptFramework === framework.name &&
+                      "bg-blue-500 text-white",
+                  )}
+                  onClick={() => {
+                    resetAllStates();
+                    setSelectedPromptFramework(framework.name);
+                  }}
+                >
+                  {framework.name}
+                </button>
+              ))}
+            </div>
+            {/* <div>
+              <Popover>
+                <PopoverTrigger>
+                  <button type="button">
+                    <Info size={22} />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px]">
+                  <p className="text-[15px] text-foreground/80">
+                    {
+                      FRAMEWORKS.find((x) => x.name === selectedPromptFramework)
+                        ?.description
+                    }
+                  </p>
+                </PopoverContent>
+              </Popover>
+            </div> */}
+          </div>
+
+          <div className="mb-3 mt-4">
+            <p className="text-[13px] mb-2 font-medium">
+              Framework Description
+            </p>
+            <p className="text-sm text-foreground/80">
+              {
+                FRAMEWORKS.find((x) => x.name === selectedPromptFramework)
+                  ?.description
+              }
+            </p>
           </div>
           <div className="mt-6">
             <form onSubmit={handleSubmit}>
@@ -858,7 +901,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                 {FRAMEWORKS.find(
                   (frm) =>
                     frm.name.toLowerCase() ===
-                    selectedPromptFramework.toLowerCase()
+                    selectedPromptFramework.toLowerCase(),
                 )?.form.elements.map((el) => {
                   switch (el.type) {
                     case "advance-options": {
@@ -875,7 +918,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                             <ChevronRightIcon
                               className={cn(
                                 "w-4 h-4 inline-block",
-                                isAdvanceOptionsExpanded && "rotate-90"
+                                isAdvanceOptionsExpanded && "rotate-90",
                               )}
                             />
                           </button>
@@ -883,7 +926,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                             {isAdvanceOptionsExpanded && (
                               <div className="grid grid-cols-2 gap-4">
                                 {ADVANCED_OPTIONS.filter(
-                                  (opt) => opt.type !== "checkbox"
+                                  (opt) => opt.type !== "checkbox",
                                 ).map((opt) => {
                                   if (!opt.isVisible()) return;
 
@@ -943,7 +986,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                                             }
                                             onChange={(e) =>
                                               opt.onChange(
-                                                e.target.value as never
+                                                e.target.value as never,
                                               )
                                             }
                                           />
@@ -959,14 +1002,14 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                             {isAdvanceOptionsExpanded && (
                               <div className="grid gap-3 mt-6">
                                 {ADVANCED_OPTIONS.filter(
-                                  (opt) => opt.type === "checkbox"
+                                  (opt) => opt.type === "checkbox",
                                 ).map((opt) => {
                                   if (!opt.isVisible()) return;
                                   return (
                                     <div
                                       aria-label="conclusion"
                                       className={cn(
-                                        "flex items-center space-x-2"
+                                        "flex items-center space-x-2",
                                       )}
                                       key={opt.name}
                                     >
@@ -1111,7 +1154,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
             )}
             {output &&
               !histories.some(
-                (history: any) => history.response === output
+                (history: any) => history.response === output,
               ) && (
                 <OutputCard
                   output={output}
@@ -1148,7 +1191,7 @@ function OutputCard({
     <div
       className={cn(
         "p-5 group rounded-xl bg-secondary/50 border text-[15px] relative",
-        className
+        className,
       )}
     >
       <div className="">{output}</div>
