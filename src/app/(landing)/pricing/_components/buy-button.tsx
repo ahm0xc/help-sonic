@@ -17,8 +17,10 @@ export default function BuyButton({ isSubscribed }: { isSubscribed: boolean }) {
     >
       <a
         href={getFormattedPaymentLink(
-          pricingPlans[0].link,
-          user?.emailAddresses[0].emailAddress ?? "",
+          pricingPlans[0].links[
+            process.env.NODE_ENV === "development" ? "dev" : "live"
+          ],
+          user?.emailAddresses[0].emailAddress ?? ""
         )}
       >
         {isSubscribed ? (

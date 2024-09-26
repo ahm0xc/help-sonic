@@ -17,7 +17,10 @@ export const pricingPlans = [
       "Dedicated Phone Support",
       "Free Subdomain",
     ],
-    link: "https://buy.stripe.com/test_eVaeXX8jP73m3ni5kk",
+    links: {
+      dev: "https://buy.stripe.com/test_eVaeXX8jP73m3ni5kk",
+      live: "https://buy.stripe.com/test_5kA4gh5Ev1IY7bWcMM",
+    },
     cta: "Start now",
   },
 ];
