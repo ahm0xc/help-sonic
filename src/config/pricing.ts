@@ -19,7 +19,7 @@ export const pricingPlans = [
     ],
     links: {
       dev: "https://buy.stripe.com/test_eVaeXX8jP73m3ni5kk",
-      live: "https://buy.stripe.com/test_5kA4gh5Ev1IY7bWcMM",
+      live: "https://buy.stripe.com/test_7sIdTH7Cicc71vqeUU",
     },
     cta: "Start now",
   },
