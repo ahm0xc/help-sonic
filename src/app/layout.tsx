@@ -7,6 +7,7 @@ import { Toaster } from "~/components/ui/sonner";
 import QueryProvider from "~/components/query-provider";
 
 import "./globals.css";
+import CookieBanner from "~/components/cookie-banner";
 
 const fontSans = GeistSans;
 
@@ -26,6 +27,7 @@ export default function RootLayout({
         <body className={cn("antialiased font-sans", fontSans.variable)}>
           <QueryProvider>
             {children}
+            <CookieBanner />
             <Toaster richColors position="top-right" />
           </QueryProvider>
         </body>
