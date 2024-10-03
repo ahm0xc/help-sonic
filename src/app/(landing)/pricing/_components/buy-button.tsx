@@ -20,7 +20,7 @@ export default function BuyButton({ isSubscribed }: { isSubscribed: boolean }) {
           pricingPlans[0].links[
             process.env.NODE_ENV === "development" ? "dev" : "live"
           ],
-          user?.emailAddresses[0].emailAddress ?? ""
+          user?.emailAddresses[0].emailAddress ?? "",
         )}
       >
         {isSubscribed ? (

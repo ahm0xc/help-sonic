@@ -46,12 +46,8 @@
           "name": "help-sonic_history_user_id_help-sonic_users_id_fk",
           "tableFrom": "help-sonic_history",
           "tableTo": "help-sonic_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

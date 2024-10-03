@@ -1,3 +1,4 @@
+import Footer from "../_components/footer";
 import Header from "../_components/header";
 
 export default function PrivacyPage() {
@@ -469,9 +470,11 @@ export default function PrivacyPage() {
 
         <a href="https://optout.networkadvertising.org/">
           https://optout.networkadvertising.org/
-        </a><br />
+        </a>
+        <br />
         <a href="https://optout.aboutads.info">https://optout.aboutads.info</a>
       </main>
+      <Footer />
     </div>
   );
 }

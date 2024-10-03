@@ -3,6 +3,7 @@ import React from "react";
 import Header from "./_components/header";
 import Hero from "./_components/hero";
 import PromptEnhancerV2 from "./_components/prompt-enhancer-v2";
+import Footer from "./_components/footer";
 
 const HomePage: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const HomePage: React.FC = () => {
       <div className="pb-28">
         <PromptEnhancerV2 />
       </div>
+      <Footer />
     </div>
   );
 };

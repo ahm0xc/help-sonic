@@ -539,9 +539,16 @@ export default function PromptEnhancerV2() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    // console.log(data);
-
-    // return;
+    if (!userSubscriptionQuery?.data?.isSubscribed) {
+      toast("Please subscribe to any plan to generate a prompt", {
+        action: (
+          <Button className="bg-blue-600 hover:bg-blue-500 block">
+            <Link href="/pricing">Check pricing</Link>
+          </Button>
+        ),
+      });
+      return;
+    }
 
     try {
       setOutput("");
@@ -554,6 +561,10 @@ export default function PromptEnhancerV2() {
       let outputStream: StreamableValue<string, any> | null = null;
 
       if (selectedPromptFramework.toLowerCase() === "rtf") {
+        if (!data.task || !data.role || !data.role || !data.documentType) {
+          toast.warning("Fill up the fields");
+          return;
+        }
         const getRoleSpecificInstructions = (): string | undefined => {
           if (data.role === "SEO Blog Writer") {
             return `
