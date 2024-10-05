@@ -131,12 +131,10 @@ export default function PromptEnhancerV2({
 
   const router = useRouter();
 
-  console.log("🚀", data);
-
   function resetAllStates() {
     setData({
       role: PREDEFINED_ROLES[0],
-      documentType: undefined,
+      documentType: "None",
       task: undefined,
       format: undefined,
       tone: undefined,
@@ -588,6 +586,7 @@ export default function PromptEnhancerV2({
           await generate(`SYSTEM: You are a powerful prompt enhancer who writes a prompt by the user given information\n
 INSTRUCTIONS:\n
 - only return the enhanced prompt\n
+- take the role and say like 'Act as {role}', 'Be {role}' or you can come up with something good
 - ignore the values that aren't defined in the prompt\n
 USER: Here are the details that the generated prompt should include\n
 - task is: ${data.task}\n
