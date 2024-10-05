@@ -1,5 +1,6 @@
 import {
   boolean,
+  integer,
   jsonb,
   serial,
   text,
@@ -7,6 +8,7 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
+
 import { createTable, generateId } from "../utility";
 
 export const users = createTable(
@@ -17,6 +19,8 @@ export const users = createTable(
     username: varchar("username", { length: 255 }),
     email: varchar("email", { length: 255 }).notNull(),
     imageUrl: text("image_url"),
+
+    freeTokens: integer("free_tokens").default(10).notNull(),
 
     // stripe
     isSubscribed: boolean("is_subscribed").notNull().default(false),

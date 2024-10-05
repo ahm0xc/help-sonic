@@ -1,18 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs";
 import {
   ChevronRightIcon,
   CopyCheckIcon,
   CopyIcon,
   SparklesIcon,
+  TriangleAlertIcon,
 } from "lucide-react";
 import { readStreamableValue, StreamableValue } from "ai/rsc";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { Info } from "@phosphor-icons/react";
+import { Coins, Info, RocketLaunch } from "@phosphor-icons/react";
 
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -36,6 +37,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import decrementFreeToken from "~/actions";
+import { useRouter } from "next/navigation";
 
 const PREDEFINED_ROLES = [
   "SEO Blog Writer",
@@ -72,7 +76,13 @@ interface Data {
   example: string | undefined;
 }
 
-export default function PromptEnhancerV2() {
+export default function PromptEnhancerV2({
+  isSubscribed,
+  freeTokens,
+}: {
+  isSubscribed: boolean;
+  freeTokens: number;
+}) {
   const [selectedPromptFramework, setSelectedPromptFramework] = useState("RTF");
   const [isHumanizeResponseEnabled, setIsHumanizeResponseEnabled] =
     useState(true);
@@ -84,7 +94,7 @@ export default function PromptEnhancerV2() {
 
   const [data, setData] = useState<Data>({
     role: PREDEFINED_ROLES[0],
-    documentType: undefined,
+    documentType: "None",
     task: undefined,
     format: undefined,
     tone: undefined,
@@ -111,12 +121,17 @@ export default function PromptEnhancerV2() {
 
   const roleInputRef = useRef<HTMLInputElement>(null);
 
+  const { user } = useUser();
+
   const { data: histories } = useQuery({
     queryKey: ["histories"],
     queryFn: () => fetch("/api/history").then((res) => res.json()),
+    enabled: !!user?.id,
   });
 
-  const userSubscriptionQuery = useUserSubscription();
+  const router = useRouter();
+
+  // const userSubscriptionQuery = useUserSubscription();
 
   function resetAllStates() {
     setData({
@@ -539,14 +554,22 @@ export default function PromptEnhancerV2() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!userSubscriptionQuery?.data?.isSubscribed) {
-      toast("Please subscribe to any plan to generate a prompt", {
-        action: (
-          <Button className="bg-blue-600 hover:bg-blue-500 block">
-            <Link href="/pricing">Check pricing</Link>
-          </Button>
-        ),
-      });
+    if (!isSubscribed && freeTokens < 0) {
+      toast(
+        "You have exceeded your free tokens. Please upgrade your plan to generate a prompt",
+        {
+          action: (
+            <Button className="bg-blue-600 hover:bg-blue-500 block">
+              <Link href="/pricing">Upgrade now</Link>
+            </Button>
+          ),
+        },
+      );
+      return;
+    }
+
+    if (!data.task || !data.role || !data.role || !data.documentType) {
+      toast.warning("Fill up the fields");
       return;
     }
 
@@ -561,10 +584,6 @@ export default function PromptEnhancerV2() {
       let outputStream: StreamableValue<string, any> | null = null;
 
       if (selectedPromptFramework.toLowerCase() === "rtf") {
-        if (!data.task || !data.role || !data.role || !data.documentType) {
-          toast.warning("Fill up the fields");
-          return;
-        }
         const getRoleSpecificInstructions = (): string | undefined => {
           if (data.role === "SEO Blog Writer") {
             return `
@@ -721,36 +740,39 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
       console.error(error);
       toast.error("Error enhancing prompt");
     } finally {
+      await decrementFreeToken();
       setIsOutputLoading(false);
     }
+
+    router.refresh();
   }
 
-  useEffect(() => {
-    resetAllStates();
-    const defaultData = {
-      ...FRAMEWORKS.find(
-        (f) => f.name === selectedPromptFramework,
-      )?.form.elements.reduce((acc, el) => {
-        return {
-          ...acc,
-          // @ts-expect-error
-          [el.name]: el.defaultValue,
-        };
-      }, {}),
-      ...ADVANCED_OPTIONS.reduce(
-        (acc, opt) => ({
-          ...acc,
-          [opt.name.toLowerCase().replace(/\s/g, "")]: opt.defaultValue,
-        }),
-        {},
-      ),
-    };
-    setData(defaultData as any);
-  }, [selectedPromptFramework]);
+  // useEffect(() => {
+  //   resetAllStates();
+  //   const defaultData = {
+  //     ...FRAMEWORKS.find(
+  //       (f) => f.name === selectedPromptFramework
+  //     )?.form.elements.reduce((acc, el) => {
+  //       return {
+  //         ...acc,
+  //         // @ts-expect-error
+  //         [el.name]: el.defaultValue,
+  //       };
+  //     }, {}),
+  //     ...ADVANCED_OPTIONS.reduce(
+  //       (acc, opt) => ({
+  //         ...acc,
+  //         [opt.name.toLowerCase().replace(/\s/g, "")]: opt.defaultValue,
+  //       }),
+  //       {}
+  //     ),
+  //   };
+  //   setData(defaultData as any);
+  // }, [selectedPromptFramework]);
 
   return (
     <div className="container max-w-7xl scroll-m-10" id="prompt-enhancer">
-      {!userSubscriptionQuery?.data?.isSubscribed &&
+      {/* {!userSubscriptionQuery?.data?.isSubscribed &&
         !userSubscriptionQuery.isLoading && (
           <div>
             <div className="m-3 bg-blue-50 border border-blue-100 p-6 rounded-xl space-y-2">
@@ -763,7 +785,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
               </Button>
             </div>
           </div>
-        )}
+        )} */}
       <div className="grid grid-cols-2 gap-10 shadow-lg rounded-3xl p-8 border bg-background">
         <section>
           <div>
@@ -1054,7 +1076,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                           <Label htmlFor={el.name}>{el.label}</Label>
                           <Select
                             defaultValue={el.defaultValue}
-                            onValueChange={(value) => el.onChange(value)}
+                            onValueChange={(value) => el.onChange?.(value)}
                           >
                             <SelectTrigger
                               name={el.name}
@@ -1085,7 +1107,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                             name={el.name}
                             placeholder={el.placeholder}
                             defaultValue={el.defaultValue}
-                            onChange={(e) => el.onChange(e.target.value)}
+                            onChange={(e) => el.onChange?.(e.target.value)}
                           />
                         </div>
                       );
@@ -1100,7 +1122,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                             placeholder={el.placeholder}
                             defaultValue={el.defaultValue}
                             rows={el.minRows}
-                            onChange={(e) => el.onChange(e.target.value)}
+                            onChange={(e) => el.onChange?.(e.target.value)}
                           />
                         </div>
                       );
@@ -1126,7 +1148,7 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
               </div>
               <div className="mt-4">
                 <SignedIn>
-                  <div className="flex items-center gap-3">
+                  <div className="space-y-2">
                     <Button
                       size="lg"
                       className="bg-gradient-to-r from-purple-500 to-blue-500"
@@ -1134,6 +1156,27 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                     >
                       <SparklesIcon className="h-4 w-4 mr-2" /> Enhance Prompt
                     </Button>
+                    {!isSubscribed && (
+                      <Alert className="mt-2">
+                        {!isSubscribed && freeTokens > 0 ? (
+                          <>
+                            <Coins className="h-6 w-6" />
+                            <AlertDescription>
+                              You have {freeTokens} free generations left.
+                            </AlertDescription>
+                          </>
+                        ) : null}
+                        {!isSubscribed && freeTokens <= 0 && (
+                          <>
+                            <RocketLaunch className="h-4 w-4" />
+                            <AlertDescription>
+                              You are out of free credits please consider
+                              subscribing to any of the plans to continue.
+                            </AlertDescription>
+                          </>
+                        )}
+                      </Alert>
+                    )}
                   </div>
                 </SignedIn>
                 <SignedOut>
@@ -1147,6 +1190,12 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                       Enhance Prompt
                     </Button>
                   </SignInButton>
+                  <Alert className="mt-2" variant="warning">
+                    <TriangleAlertIcon className="h-4 w-4" />
+                    <AlertDescription>
+                      You must be logged in to generate prompts.
+                    </AlertDescription>
+                  </Alert>
                 </SignedOut>
               </div>
             </form>

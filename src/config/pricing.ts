@@ -18,9 +18,9 @@ export const pricingPlans = [
       "Free Subdomain",
     ],
     links: {
-      dev: "https://buy.stripe.com/test_eVaeXX8jP73m3ni5kk",
-      live: "https://buy.stripe.com/test_7sIdTH7Cicc71vqeUU",
+      dev: "https://buy.stripe.com/test_9AQaHv4q6b83ca43cd",
+      live: "https://buy.stripe.com/test_9AQaHv4q6b83ca43cd",
     },
-    cta: "Start now",
+    cta: "Start for free",
   },
 ];
