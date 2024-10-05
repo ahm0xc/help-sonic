@@ -131,7 +131,7 @@ export default function PromptEnhancerV2({
 
   const router = useRouter();
 
-  // const userSubscriptionQuery = useUserSubscription();
+  console.log("🚀", data);
 
   function resetAllStates() {
     setData({
@@ -584,139 +584,210 @@ export default function PromptEnhancerV2({
       let outputStream: StreamableValue<string, any> | null = null;
 
       if (selectedPromptFramework.toLowerCase() === "rtf") {
-        const getRoleSpecificInstructions = (): string | undefined => {
-          if (data.role === "SEO Blog Writer") {
-            return `
-- research the topic {topic} thoroughly. (the topic comes from the field “Task”)
-- write an article optimized according to SEO best practice with {word count} words and with the main keyword {keyword} from the {perspective} Perspective.
-- add a conclusion to the article according to the 'INCLUDE CONCLUSION' parameter
-- formulate a FAQ with 5 questions and answers according to the 'INCLUDE FAQS' parameter
-- Below the text, place the links that you used as a source of information according to the 'INCLUDE SOURCES' parameter`;
-          }
-          if (data.role === "Rewriter") {
-            return `
-- Act as an experienced rewriter with a deep understanding of effective communication and audience engagement.
-- Ensure the rewritten text is tailored for the {Target Audience}.
-- Maintain the original meaning and intent while using alternative phrasing and sentence structures.
-- Adjust the tone of voice to be {Tone of Voice} and use the {perspective} perspective
-- Optimize the text according to SEO best practices, including the integration of relevant keywords according to the parameters
-- Improve the readability to ensure the text is clear and engaging for the intended audience.
-- Avoid any direct duplication of the original text to ensure uniqueness.`;
-          }
-          if (data.role === "Coder") {
-            return `
-- You are an experienced {Programming Language} developer tasked with creating a {project description, e.g., a management tool}. (the project description comes from the field “Task”)
-- Be modular and extendable so that additional features can be easily added in the future
-- Be modular and extendable so that additional features can be easily added in the future
-- Be optimized for readability and maintainability, adhering to best practices such as PEP 8
-- Include inline comments explaining each function and section of the code
-- Include inline comments explaining each function and section of the code`;
-          }
-          if (data.role === "Fitness Coach") {
-            return `
-- You are an expert fitness coach, and your task is to create a personalized fitness plan for a
-- {age}-year-old individual (according to the 'AGE' parameter)
-- who weighs {weight} kg (according to the 'WEIGHT' parameter)
-- is {height} cm tall (according to the 'HEIGHT' parameter)
-- and has a fitness level of {fitness level} (according to the 'FITNESS LEVEL' parameter)
-- The goal is to guide this individual toward a healthier lifestyle, improve their metabolism, and achieve a better overall fitness level.
-- The plan should include A weekly workout schedule with a balance of cardio, strength training, and flexibility exercises
-- A weekly workout schedule with a balance of cardio, strength training, and flexibility exercises
-- Recommendations for daily activities and habits that promote a healthier lifestyle`;
-          }
-        };
-
         const { output } =
-          await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
-
-PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
-- ROLE NAME: ${data.role}
-- TASK: ${data.task}
-- FORMAT: ${data.format}
-- TONE: ${data.tone}
-- DOCUMENT TYPE: ${data.documentType}
-- WORD COUNT: ${data.wordCount}
-- PERSPECTIVE: ${data.perspective}
-- HUMANIZE RESPONSE: ${isHumanizeResponseEnabled}
-- KEYWORDS: ${data.keywords}
-- INCLUDE FAQS: ${data.isFaqIncluded}
-- INCLUDE CONCLUSION: ${data.isConclusionIncluded}
-- INCLUDE SOURCES: ${data.isSourcesIncluded}
-- PROGRAMMING LANGUAGE: ${data.programmingLanguage}
-- PROJECT DESCRIPTION: ${data.projectDescription}
-- TARGET AUDIENCE: ${data.targetAudience}
-- AGE: ${data.age}
-- HEIGHT: ${data.height}
-- WEIGHT: ${data.weight}
-- FITNESS LEVEL: ${data.fitnessLevel}
-
-INSTRUCTIONS FOR PROMPT ENHANCER:
-- MUST: include all the defined parameters in the enhanced prompt as commands
-- fix grammatical mistakes
-- only return the prompt
-- if any parameter is not specified, ignore the line
-- change the prompt so that it doesn't look always the same but keep the core meaning
-- use synonyms to make the prompt more readable
-- enhance the given prompt below and only return the enhanced prompt
-- don't generate responses on the enhanced prompt
-${getRoleSpecificInstructions()}
-
-PROMPT TO ENHANCE:
-${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}`);
+          await generate(`SYSTEM: You are a powerful prompt enhancer who writes a prompt by the user given information\n
+INSTRUCTIONS:\n
+- only return the enhanced prompt\n
+- ignore the values that aren't defined in the prompt\n
+USER: Here are the details that the generated prompt should include\n
+- task is: ${data.task}\n
+- role is: ${data.role}\n
+- document type is: ${data.documentType}\n
+- format should be: ${data.format}\n
+- word count is: ${data.wordCount}\n
+- tone of voice is: ${data.tone}\n
+- perspective is: ${data.perspective}\n
+- keywords are: ${data.keywords}\n
+- is FAQ included: ${data.isFaqIncluded}\n
+- is conclusion included: ${data.isConclusionIncluded}\n
+- is sources included: ${data.isSourcesIncluded}\n
+- is SEO best practices included: ${data.isSeoBestPracticesIncluded}\n
+- target audience is: ${data.targetAudience}\n
+- programming language is: ${data.programmingLanguage}\n
+- project description is: ${data.projectDescription}\n
+- age is: ${data.age}\n
+- weight is: ${data.weight}\n
+- height is: ${data.height}\n
+- fitness level is: ${data.fitnessLevel}`);
         outputStream = output;
-      }
-      if (selectedPromptFramework.toLowerCase() === "tag") {
+      } else if (selectedPromptFramework.toLowerCase() === "rtf") {
         const { output } =
-          await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
-PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
-- task: ${data.task}
-- action: ${data.action}
-- goal: ${data.goal}
-
-INSTRUCTIONS FOR PROMPT ENHANCER:
-- MUST: include all the defined parameters in the enhanced prompt as commands
-- The task is to evaluate the performance of team members
-- Act as a Direct manager and assess the strengths and weaknesses of team members.
-- Goal is to improve team performance so that the average user satisfaction score moves from 6 to 7.5 in the next quarter.
-- fix grammatical mistakes
-- only return the prompt
-- if any parameter is not specified, ignore the line
-- change the prompt so that it doesn't look always the same but keep the core meaning
-- use synonyms to make the prompt more readable
-- enhance the given prompt below and only return the enhanced prompt
-- don't generate responses on the enhanced prompt
-
-PROMPT TO ENHANCE (replace the variables with {} with the corresponding parameters):
-${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
-`);
-
+          await generate(`SYSTEM: You are a powerful prompt enhancer who writes a prompt by the user given information\n
+INSTRUCTIONS:\n
+- only return the enhanced prompt\n
+- ignore the values that aren't defined in the prompt\n
+USER: Here are the details that the generated prompt should include\n
+- task is: ${data.task}\n
+- action is: ${data.action}\n
+- goal is: ${data.goal}\n`);
         outputStream = output;
-      }
-      if (selectedPromptFramework.toLowerCase() === "care") {
+      } else if (selectedPromptFramework.toLowerCase() === "care") {
         const { output } =
-          await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
-PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
-- context: ${data.context}
-- action: ${data.action}
-- result: ${data.result}
-- example: ${data.example}
-
-INSTRUCTIONS FOR PROMPT ENHANCER:
-- MUST: include all the defined parameters in the enhanced prompt as commands
-- fix grammatical mistakes
-- only return the prompt
-- if any parameter is not specified, ignore the line
-- change the prompt so that it doesn't look always the same but keep the core meaning
-- use synonyms to make the prompt more readable
-- enhance the given prompt below and only return the enhanced prompt
-- don't generate responses on the enhanced prompt
-
-PROMPT TO ENHANCE (replace the variables with {} with the corresponding parameters):
-${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
-`);
-
+          await generate(`SYSTEM: You are a powerful prompt enhancer who writes a prompt by the user given information\n
+INSTRUCTIONS:\n
+- only return the enhanced prompt\n
+- ignore the values that aren't defined in the prompt\n
+USER: Here are the details that the generated prompt should include\n
+- context: ${data.context}\n
+- action: ${data.action}\n
+- result: ${data.result}\n
+- example: ${data.example}`);
         outputStream = output;
+      } else {
+        toast.error("Other frameworks aren't ready yet");
+        return;
       }
+
+      //       if (selectedPromptFramework.toLowerCase() === "rtf") {
+      //         const getRoleSpecificInstructions = (): string | undefined => {
+      //           if (data.role === "SEO Blog Writer") {
+      //             return `
+      // - research the topic {topic} thoroughly. (the topic comes from the field “Task”)
+      // - write an article optimized according to SEO best practice with {word count} words and with the main keyword {keyword} from the {perspective} Perspective.
+      // - add a conclusion to the article according to the 'INCLUDE CONCLUSION' parameter
+      // - formulate a FAQ with 5 questions and answers according to the 'INCLUDE FAQS' parameter
+      // - Below the text, place the links that you used as a source of information according to the 'INCLUDE SOURCES' parameter`;
+      //           }
+      //           if (data.role === "Rewriter") {
+      //             return `
+      // - Act as an experienced rewriter with a deep understanding of effective communication and audience engagement.
+      // - Ensure the rewritten text is tailored for the {Target Audience}.
+      // - Maintain the original meaning and intent while using alternative phrasing and sentence structures.
+      // - Adjust the tone of voice to be {Tone of Voice} and use the {perspective} perspective
+      // - Optimize the text according to SEO best practices, including the integration of relevant keywords according to the parameters
+      // - Improve the readability to ensure the text is clear and engaging for the intended audience.
+      // - Avoid any direct duplication of the original text to ensure uniqueness.`;
+      //           }
+      //           if (data.role === "Coder") {
+      //             return `
+      // - You are an experienced {Programming Language} developer tasked with creating a {project description, e.g., a management tool}. (the project description comes from the field “Task”)
+      // - Be modular and extendable so that additional features can be easily added in the future
+      // - Be modular and extendable so that additional features can be easily added in the future
+      // - Be optimized for readability and maintainability, adhering to best practices such as PEP 8
+      // - Include inline comments explaining each function and section of the code
+      // - Include inline comments explaining each function and section of the code`;
+      //           }
+      //           if (data.role === "Fitness Coach") {
+      //             return `
+      // - You are an expert fitness coach, and your task is to create a personalized fitness plan for a
+      // - {age}-year-old individual (according to the 'AGE' parameter)
+      // - who weighs {weight} kg (according to the 'WEIGHT' parameter)
+      // - is {height} cm tall (according to the 'HEIGHT' parameter)
+      // - and has a fitness level of {fitness level} (according to the 'FITNESS LEVEL' parameter)
+      // - The goal is to guide this individual toward a healthier lifestyle, improve their metabolism, and achieve a better overall fitness level.
+      // - The plan should include A weekly workout schedule with a balance of cardio, strength training, and flexibility exercises
+      // - A weekly workout schedule with a balance of cardio, strength training, and flexibility exercises
+      // - Recommendations for daily activities and habits that promote a healthier lifestyle`;
+      //           }
+      //         };
+
+      //         const { output } =
+      //           await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
+
+      // PROMPT PARAMETERS (take only the ones that are defined):
+      // - ROLE NAME: ${data.role}
+      // - TASK: ${data.task}
+      // - FORMAT: ${data.format}
+      // - TONE: ${data.tone}
+      // - DOCUMENT TYPE: ${data.documentType}
+      // - WORD COUNT: ${data.wordCount}
+      // - PERSPECTIVE: ${data.perspective}
+      // - HUMANIZE RESPONSE: ${isHumanizeResponseEnabled}
+      // - KEYWORDS: ${data.keywords}
+      // - INCLUDE FAQS: ${data.isFaqIncluded}
+      // - INCLUDE CONCLUSION: ${data.isConclusionIncluded}
+      // - INCLUDE SOURCES: ${data.isSourcesIncluded}
+      // - PROGRAMMING LANGUAGE: ${data.programmingLanguage}
+      // - PROJECT DESCRIPTION: ${data.projectDescription}
+      // - TARGET AUDIENCE: ${data.targetAudience}
+      // - AGE: ${data.age}
+      // - HEIGHT: ${data.height}
+      // - WEIGHT: ${data.weight}
+      // - FITNESS LEVEL: ${data.fitnessLevel}
+
+      // INSTRUCTIONS FOR PROMPT ENHANCER:
+      // - MUST: include all the defined parameters in the enhanced prompt as commands
+      // - fix grammatical mistakes
+      // - only return the prompt
+      // - if any parameter is not specified, ignore the line
+      // - change the prompt so that it doesn't look always the same but keep the core meaning
+      // - use synonyms to make the prompt more readable
+      // - enhance the given prompt below and only return the enhanced prompt
+      // - don't generate responses on the enhanced prompt
+      // ${getRoleSpecificInstructions()}
+
+      // FINE TUNING:
+      // | **Role**            | **Task**                                                  | **Output**                                            |
+      // |---------------------|-----------------------------------------------------------|--------------------------------------------------------------------------|
+      // "| **Code Rewriter**    | Rewrite the given code to a professional level.           | ""Act as a coder, take this code and rewrite it professionally: [insert code]"" |"
+      // "| **Content Editor**   | Edit the following paragraph to be more engaging.         | ""As a content editor, enhance this text for readability: [insert paragraph]"" |"
+      // "| **SEO Specialist**   | Optimize the provided blog for SEO.                       | ""Optimize the following blog post for SEO with best practices: [insert blog]"" |"
+      // "| **UX Designer**      | Redesign the UI for better user experience.               | ""As a UX designer, create a more user-friendly version of this interface: [insert UI description]"" |"
+      // "| **Data Analyst**     | Analyze the data and provide insights.                    | ""Analyze the data and give actionable insights: [insert dataset]""          |"
+      // "| **Marketing Expert** | Create a marketing strategy for the given product.        | ""Develop a marketing plan for this product: [insert product description]""  |"
+      // "| **Social Media Manager** | Create a content calendar for the next month.           | ""Plan a month-long content strategy for these topics: [insert topics]""      |"
+      // "| **Copywriter**       | Write a compelling product description.                   | ""Create a captivating description for this product: [insert product details]"" |"
+      // "| **Project Manager**  | Build a timeline for the project milestones.              | ""As a project manager, outline a timeline for these milestones: [insert milestones]"" |"
+      // "| **Graphic Designer** | Design a logo for a modern brand.                         | ""Create a sleek and modern logo for this brand: [insert brand description]"" |"
+
+      // This structure should offer flexibility for dynamic user input while providing clarity for each role's task.
+
+      // PROMPT TO ENHANCE:
+      // ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}`);
+      //         outputStream = output;
+      //       }
+      //       if (selectedPromptFramework.toLowerCase() === "tag") {
+      //         const { output } =
+      //           await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
+      // PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
+      // - task: ${data.task}
+      // - action: ${data.action}
+      // - goal: ${data.goal}
+
+      // INSTRUCTIONS FOR PROMPT ENHANCER:
+      // - MUST: include all the defined parameters in the enhanced prompt as commands
+      // - The task is to evaluate the performance of team members
+      // - Act as a Direct manager and assess the strengths and weaknesses of team members.
+      // - Goal is to improve team performance so that the average user satisfaction score moves from 6 to 7.5 in the next quarter.
+      // - fix grammatical mistakes
+      // - only return the prompt
+      // - if any parameter is not specified, ignore the line
+      // - change the prompt so that it doesn't look always the same but keep the core meaning
+      // - use synonyms to make the prompt more readable
+      // - enhance the given prompt below and only return the enhanced prompt
+      // - don't generate responses on the enhanced prompt
+
+      // PROMPT TO ENHANCE (replace the variables with {} with the corresponding parameters):
+      // ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
+      // `);
+
+      //         outputStream = output;
+      //       }
+      //       if (selectedPromptFramework.toLowerCase() === "care") {
+      //         const { output } =
+      //           await generate(`Your are a ai model that Enhance prompts given by the users with the following parameters and instructions:
+      // PROMPT PARAMETERS (take only the ones that are defined and necessary for the prompt):
+      // - context: ${data.context}
+      // - action: ${data.action}
+      // - result: ${data.result}
+      // - example: ${data.example}
+
+      // INSTRUCTIONS FOR PROMPT ENHANCER:
+      // - MUST: include all the defined parameters in the enhanced prompt as commands
+      // - fix grammatical mistakes
+      // - only return the prompt
+      // - if any parameter is not specified, ignore the line
+      // - change the prompt so that it doesn't look always the same but keep the core meaning
+      // - use synonyms to make the prompt more readable
+      // - enhance the given prompt below and only return the enhanced prompt
+      // - don't generate responses on the enhanced prompt
+
+      // PROMPT TO ENHANCE (replace the variables with {} with the corresponding parameters):
+      // ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
+      // `);
+
+      //         outputStream = output;
+      //       }
 
       if (!outputStream) {
         console.log("No output stream");
@@ -857,12 +928,13 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                           placeholder="Facebook ad manager"
                           autoComplete="off"
                           value={data.role}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            resetAllStates();
                             setData((prev) => ({
                               ...prev,
                               role: e.target.value,
-                            }))
-                          }
+                            }));
+                          }}
                           ref={roleInputRef}
                           required
                         />
@@ -873,12 +945,13 @@ ${PROMPTS[selectedPromptFramework.toLowerCase() as keyof typeof PROMPTS].prompt}
                         <Select
                           defaultValue={PREDEFINED_ROLES[0]}
                           required
-                          onValueChange={(v) =>
+                          onValueChange={(v) => {
+                            resetAllStates();
                             setData((prev) => ({
                               ...prev,
                               role: v,
-                            }))
-                          }
+                            }));
+                          }}
                         >
                           <SelectTrigger
                             name="role"
