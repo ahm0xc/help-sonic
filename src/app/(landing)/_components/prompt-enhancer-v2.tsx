@@ -660,45 +660,8 @@ USER: Here are the details that the generated prompt should include\n
     router.refresh();
   }
 
-  // useEffect(() => {
-  //   resetAllStates();
-  //   const defaultData = {
-  //     ...FRAMEWORKS.find(
-  //       (f) => f.name === selectedPromptFramework
-  //     )?.form.elements.reduce((acc, el) => {
-  //       return {
-  //         ...acc,
-  //         // @ts-expect-error
-  //         [el.name]: el.defaultValue,
-  //       };
-  //     }, {}),
-  //     ...ADVANCED_OPTIONS.reduce(
-  //       (acc, opt) => ({
-  //         ...acc,
-  //         [opt.name.toLowerCase().replace(/\s/g, "")]: opt.defaultValue,
-  //       }),
-  //       {}
-  //     ),
-  //   };
-  //   setData(defaultData as any);
-  // }, [selectedPromptFramework]);
-
   return (
     <div className="container max-w-7xl scroll-m-10" id="prompt-enhancer">
-      {/* {!userSubscriptionQuery?.data?.isSubscribed &&
-        !userSubscriptionQuery.isLoading && (
-          <div>
-            <div className="m-3 bg-blue-50 border border-blue-100 p-6 rounded-xl space-y-2">
-              <h4 className="text-lg font-medium text-blue-600">⚠️ Alert</h4>
-              <p className="text-blue-800">
-                Subscribe to any of the available plan to start using Help Sonic
-              </p>
-              <Button asChild className="bg-blue-600 hover:bg-blue-500">
-                <Link href="/pricing">Check Plans</Link>
-              </Button>
-            </div>
-          </div>
-        )} */}
       <div className="grid grid-cols-2 gap-10 shadow-lg rounded-3xl p-8 border bg-background">
         <section>
           <div>
