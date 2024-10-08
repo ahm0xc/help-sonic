@@ -13,12 +13,11 @@ import { readStreamableValue, StreamableValue } from "ai/rsc";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import Siriwave, { IReactSiriwaveProps } from "react-siriwave";
 import {
-  ArrowsClockwise,
   Check,
   Checks,
   Coins,
-  DotOutline,
   Eraser,
   Microphone,
   Pen,
@@ -48,8 +47,8 @@ import { generate, saveHistory } from "../_actions";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import decrementFreeToken, { extractRTFFromText } from "~/actions";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogTrigger } from "~/components/ui/dialog";
-import { Card } from "~/components/ui/card";
+import { Dialog, DialogContent } from "~/components/ui/dialog";
+import useVoice from "~/hooks/use-voice";
 
 const PREDEFINED_ROLES = [
   "SEO Blog Writer",
@@ -111,6 +110,26 @@ export default function PromptEnhancerV2({
   const [editedVoiceInput, setEditedVoiceInput] = useState("");
   const [isExtractingRTFFromTranscript, setIsExtractingRTFFromTranscript] =
     useState(false);
+  const [siriWaveConfig, setSiriWaveConfig] = useState<IReactSiriwaveProps>({
+    theme: "ios9",
+    ratio: 1,
+    speed: 0.08,
+    amplitude: 1,
+    frequency: 6,
+    color: "#000",
+    cover: false,
+    width: 300,
+    height: 100,
+    autostart: true,
+    pixelDepth: 1,
+    lerpSpeed: 0.1,
+  });
+
+  const { isSpeaking, volume: volumeLevel } = useVoice({
+    enabled: isListening,
+  });
+
+  console.log({ isSpeaking, volume: volumeLevel });
   const recognitionRef = useRef<any>(null);
 
   const [data, setData] = useState<Data>({
@@ -818,6 +837,22 @@ USER: Here are the details that the generated prompt should include\n
   //   }
   // }, [isMicModalOpen]);
 
+  useEffect(() => {
+    setSiriWaveConfig((prevConfig) => ({
+      ...prevConfig,
+      amplitude: isListening ? (volumeLevel > 0.01 ? volumeLevel * 500 : 0) : 0,
+      // speed: isListening ? (volumeLevel > 0.5 ? volumeLevel * 5 : 0) : 0,
+      // this frequency is only available in ios style
+      // frequency: isListening
+      //   ? volumeLevel > 0.01
+      //     ? volumeLevel * 10
+      //     : 0
+      //   : volumeLevel > 0.5
+      //     ? volumeLevel * 20
+      //     : 0,
+    }));
+  }, [volumeLevel, isListening]);
+
   return (
     <>
       <Dialog open={isMicModalOpen} onOpenChange={setIsMicModalOpen}>
@@ -829,7 +864,12 @@ USER: Here are the details that the generated prompt should include\n
               {micStatus}
             </span>
           </div>
-          <div className="mt-6">
+          <div className="py-3">
+            <div className="w-fit mx-auto">
+              <Siriwave {...siriWaveConfig} />
+            </div>
+          </div>
+          <div className="mt-0">
             {isEditingVoiceInput ? (
               <div>
                 <Textarea
