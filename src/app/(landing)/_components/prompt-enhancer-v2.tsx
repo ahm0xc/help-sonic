@@ -13,7 +13,21 @@ import { readStreamableValue, StreamableValue } from "ai/rsc";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { Coins, RocketLaunch } from "@phosphor-icons/react";
+import {
+  ArrowsClockwise,
+  Check,
+  Checks,
+  Coins,
+  DotOutline,
+  Eraser,
+  Microphone,
+  Pen,
+  Play,
+  RocketLaunch,
+  Spinner,
+  Stop,
+  X,
+} from "@phosphor-icons/react";
 
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -32,8 +46,10 @@ import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
 import { generate, saveHistory } from "../_actions";
 import { Alert, AlertDescription } from "~/components/ui/alert";
-import decrementFreeToken from "~/actions";
+import decrementFreeToken, { extractRTFFromText } from "~/actions";
 import { useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogTrigger } from "~/components/ui/dialog";
+import { Card } from "~/components/ui/card";
 
 const PREDEFINED_ROLES = [
   "SEO Blog Writer",
@@ -85,6 +101,17 @@ export default function PromptEnhancerV2({
   const [isUsingCustomRole, setIsUsingCustomRole] = useState(false);
   const [isOutputLoading, setIsOutputLoading] = useState(false);
   const [output, setOutput] = useState("");
+
+  const [micStatus, setMicStatus] = useState("");
+  const [isMicModalOpen, setIsMicModalOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [finalTranscript, setFinalTranscript] = useState("");
+  const [interimTranscript, setInterimTranscript] = useState("");
+  const [isEditingVoiceInput, setIsEditingVoiceInput] = useState(false);
+  const [editedVoiceInput, setEditedVoiceInput] = useState("");
+  const [isExtractingRTFFromTranscript, setIsExtractingRTFFromTranscript] =
+    useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const [data, setData] = useState<Data>({
     role: PREDEFINED_ROLES[0],
@@ -195,6 +222,7 @@ export default function PromptEnhancerV2({
             placeholder:
               "Design a comprehensive marketing plan for a SaaS company",
             minRows: 4,
+            value: data.task,
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, task: value }));
             },
@@ -206,6 +234,7 @@ export default function PromptEnhancerV2({
             placeholder:
               "Add bullet points, headings, and subheadings to the document",
             minRows: 3,
+            value: data.format,
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, format: value }));
             },
@@ -226,6 +255,7 @@ export default function PromptEnhancerV2({
             name: "Task",
             placeholder: "Task",
             defaultValue: "",
+            value: data.task,
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, task: value }));
             },
@@ -237,6 +267,7 @@ export default function PromptEnhancerV2({
             name: "action",
             placeholder: "",
             minRows: 3,
+            value: data.action,
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, action: value }));
             },
@@ -248,6 +279,7 @@ export default function PromptEnhancerV2({
             name: "goal",
             placeholder: "",
             minRows: 3,
+            value: data.goal,
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, goal: value }));
             },
@@ -259,7 +291,7 @@ export default function PromptEnhancerV2({
     {
       name: "CARE",
       description:
-        "The CARE prompt framework stands for Context, Action, Role, and Example—four key elements that guide the model in producing more accurate and relevant responses.",
+        "The CARE prompt framework stands for Context, Action, Result, and Example—four key elements that guide the model in producing more accurate and relevant responses.",
       form: {
         elements: [
           {
@@ -269,6 +301,7 @@ export default function PromptEnhancerV2({
             name: "context",
             placeholder: "We are launching a new line of sustainable clothing",
             minRows: 3,
+            value: data.context,
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, context: value }));
             },
@@ -282,6 +315,7 @@ export default function PromptEnhancerV2({
             placeholder:
               "Can you assist us in creating a targeted advertising campaign that emphasizes our environmental commitment",
             defaultValue: "",
+            value: data.action,
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, action: value }));
             },
@@ -295,6 +329,7 @@ export default function PromptEnhancerV2({
             placeholder:
               "Our desired outcome is to drive product awaroness and sales, A good example of a similar successful initiative is Patagonia's",
             minRows: 3,
+            value: data.result,
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, action: value }));
             },
@@ -307,6 +342,7 @@ export default function PromptEnhancerV2({
             placeholder:
               "Don't Buy This Jackot campaign, which highlighted their commitment to sustainability while enhancing their brand imago.",
             minRows: 3,
+            value: data.example,
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, goal: value }));
             },
@@ -390,6 +426,7 @@ export default function PromptEnhancerV2({
       name: "keywords",
       placeholder: "Add keywords",
       defaultValue: "",
+      value: data.keywords,
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, keywords: value }));
       },
@@ -455,6 +492,7 @@ export default function PromptEnhancerV2({
       name: "Target Audience",
       placeholder: "The audience you want to target",
       defaultValue: "",
+      value: data.targetAudience,
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, targetAudience: value }));
       },
@@ -468,6 +506,7 @@ export default function PromptEnhancerV2({
       name: "Programming Language",
       placeholder: "Python",
       defaultValue: "",
+      value: data.programmingLanguage,
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, programmingLanguage: value }));
       },
@@ -481,6 +520,7 @@ export default function PromptEnhancerV2({
       name: "Project Description",
       placeholder: "",
       defaultValue: "",
+      value: data.projectDescription,
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, projectDescription: value }));
       },
@@ -494,6 +534,7 @@ export default function PromptEnhancerV2({
       name: "Age",
       placeholder: "25",
       defaultValue: "",
+      value: data.age,
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, age: value }));
       },
@@ -507,6 +548,7 @@ export default function PromptEnhancerV2({
       name: "Weight (KG)",
       placeholder: "88",
       defaultValue: "",
+      value: data.weight,
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, weight: value }));
       },
@@ -520,6 +562,7 @@ export default function PromptEnhancerV2({
       name: "Height (cm)",
       placeholder: "153",
       defaultValue: "",
+      value: data.height,
       onChange: (value: string) => {
         setData((prev) => ({ ...prev, height: value }));
       },
@@ -542,6 +585,115 @@ export default function PromptEnhancerV2({
       },
     },
   ];
+
+  // async function requestMicPermission() {
+  //   try {
+  //     await navigator.mediaDevices.getUserMedia({ audio: true });
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }
+
+  function handleOnMicClick() {
+    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+      setIsMicModalOpen(true);
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+
+      recognitionRef.current.lang = "en-US";
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.continuous = true;
+
+      recognitionRef.current.onresult = (event: any) => {
+        let interimTranscript = "";
+        let finalTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + " ";
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        setFinalTranscript((prev) => prev + finalTranscript);
+        setInterimTranscript(interimTranscript);
+      };
+
+      recognitionRef.current.onstart = () => {
+        setMicStatus("Listening...");
+      };
+
+      recognitionRef.current.onend = () => {
+        setMicStatus("Not listening");
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        setMicStatus(`Recognition failed`);
+        setIsMicModalOpen(false);
+        toast.error(event.error, {
+          description: "Please make sure you granted mic permissions",
+        });
+        console.error(event.error);
+      };
+
+      startListening();
+    } else {
+      toast.error("Speech recognition is not supported in this browser.");
+    }
+  }
+
+  function stopListening() {
+    setIsListening(false);
+    recognitionRef.current?.stop();
+  }
+
+  function abortListening() {
+    setIsListening(false);
+    recognitionRef.current?.abort();
+  }
+
+  function startListening() {
+    setIsListening(true);
+    recognitionRef.current?.start();
+  }
+
+  async function extractRTFFromTranscript() {
+    setIsExtractingRTFFromTranscript(true);
+
+    const obj = await extractRTFFromText(finalTranscript);
+
+    if (!obj) {
+      toast.error("Failed to extract RTF from transcript");
+      setIsExtractingRTFFromTranscript(false);
+      return;
+    }
+
+    setIsExtractingRTFFromTranscript(false);
+    setFinalTranscript("");
+    setIsMicModalOpen(false);
+    abortListening();
+
+    setSelectedPromptFramework("RTF");
+    resetAllStates();
+
+    setIsUsingCustomRole(true);
+    setData((prev) => ({
+      ...prev,
+      role: obj.role,
+    }));
+    setData((prev) => ({
+      ...prev,
+      task: obj.task,
+    }));
+    setData((prev) => ({
+      ...prev,
+      format: obj.format,
+    }));
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -660,453 +812,578 @@ USER: Here are the details that the generated prompt should include\n
     router.refresh();
   }
 
-  return (
-    <div className="container max-w-7xl scroll-m-10" id="prompt-enhancer">
-      <div className="grid grid-cols-2 gap-10 shadow-lg rounded-3xl p-8 border bg-background">
-        <section>
-          <div>
-            <h4 className="text-xl font-bold">Choose prompt Enhancer</h4>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex flex-row gap-4 mt-6">
-              {FRAMEWORKS.map((framework) => (
-                <button
-                  key={framework.name}
-                  className={cn(
-                    "bg-secondary text-base px-3 py-1 font-medium rounded-full",
-                    selectedPromptFramework === framework.name &&
-                      "bg-blue-500 text-white",
-                  )}
-                  onClick={() => {
-                    resetAllStates();
-                    setSelectedPromptFramework(framework.name);
-                  }}
-                >
-                  {framework.name}
-                </button>
-              ))}
-            </div>
-            {/* <div>
-              <Popover>
-                <PopoverTrigger>
-                  <button type="button">
-                    <Info size={22} />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[400px]">
-                  <p className="text-[15px] text-foreground/80">
-                    {
-                      FRAMEWORKS.find((x) => x.name === selectedPromptFramework)
-                        ?.description
-                    }
-                  </p>
-                </PopoverContent>
-              </Popover>
-            </div> */}
-          </div>
+  // useEffect(() => {
+  //   if (!isMicModalOpen) {
+  //     abortListening();
+  //   }
+  // }, [isMicModalOpen]);
 
-          <div className="mb-3 mt-4">
-            <p className="text-[13px] mb-2 font-medium">
-              Framework Description
-            </p>
-            <p className="text-sm text-foreground/80">
-              {
-                FRAMEWORKS.find((x) => x.name === selectedPromptFramework)
-                  ?.description
-              }
-            </p>
+  return (
+    <>
+      <Dialog open={isMicModalOpen} onOpenChange={setIsMicModalOpen}>
+        <DialogContent>
+          <div className="flex items-center justify-between">
+            <h3>Voice assistant</h3>
+            <span className="text-xs font-medium italic">
+              <span className="not-italic">status: </span>
+              {micStatus}
+            </span>
           </div>
           <div className="mt-6">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-2 gap-4">
-                {/* custom fields */}
-                {selectedPromptFramework === "RTF" && (
-                  <div className="flex flex-col gap-2">
-                    {isUsingCustomRole ? (
-                      <>
-                        {" "}
-                        <Label htmlFor="role">Role</Label>
-                        <Input
-                          type="text"
-                          id="role"
-                          name="role"
-                          placeholder="Facebook ad manager"
-                          autoComplete="off"
-                          value={data.role}
-                          onChange={(e) => {
-                            resetAllStates();
-                            setData((prev) => ({
-                              ...prev,
-                              role: e.target.value,
-                            }));
-                          }}
-                          ref={roleInputRef}
-                          required
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <Label htmlFor="role">Role</Label>
-                        <Select
-                          defaultValue={PREDEFINED_ROLES[0]}
-                          required
-                          onValueChange={(v) => {
-                            resetAllStates();
-                            setData((prev) => ({
-                              ...prev,
-                              role: v,
-                            }));
-                          }}
-                        >
-                          <SelectTrigger
-                            name="role"
-                            id="role"
-                            className="w-full !min-w-full"
-                          >
-                            <SelectValue
-                              placeholder="Role"
-                              className="w-full"
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PREDEFINED_ROLES.map((role) => (
-                              <SelectItem
-                                key={`predefined-role//${role}`}
-                                value={role}
-                              >
-                                {role}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </>
-                    )}
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="custom-role-checkbox"
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setIsUsingCustomRole(true);
-                            setData((prev) => ({ ...prev, role: "" }));
-                            setTimeout(() => {
-                              roleInputRef.current?.focus();
-                            }, 100);
-                          } else {
-                            setData((prev) => ({
-                              ...prev,
-                              role: PREDEFINED_ROLES[0],
-                            }));
-                            setIsUsingCustomRole(false);
-                          }
-                        }}
-                      />
-                      <label
-                        htmlFor="custom-role-checkbox"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        Use custom role
-                      </label>
-                    </div>
+            {isEditingVoiceInput ? (
+              <div>
+                <Textarea
+                  className="bg-secondary p-4 rounded-lg border"
+                  rows={5}
+                  value={editedVoiceInput}
+                  onChange={(e) => setEditedVoiceInput(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div className="bg-secondary p-4 rounded-lg border">
+                {finalTranscript.length || interimTranscript.length ? (
+                  <div className="text-sm font-medium">
+                    {finalTranscript}
+                    <i className="text-foreground/70 font-normal">
+                      {interimTranscript}
+                    </i>
                   </div>
+                ) : (
+                  <i className="text-foreground/70 text-sm">
+                    try saying somethings..
+                  </i>
                 )}
-                {FRAMEWORKS.find(
-                  (frm) =>
-                    frm.name.toLowerCase() ===
-                    selectedPromptFramework.toLowerCase(),
-                )?.form.elements.map((el) => {
-                  switch (el.type) {
-                    case "advance-options": {
-                      return (
-                        <div className="mt-4 col-span-2">
-                          <button
-                            type="button"
-                            className="text-sm text-blue-600 font-medium"
-                            onClick={() =>
-                              setIsAdvanceOptionsExpanded((prev) => !prev)
-                            }
-                          >
-                            Advance options{" "}
-                            <ChevronRightIcon
-                              className={cn(
-                                "w-4 h-4 inline-block",
-                                isAdvanceOptionsExpanded && "rotate-90",
-                              )}
-                            />
-                          </button>
-                          <div className="mt-4">
-                            {isAdvanceOptionsExpanded && (
-                              <div className="grid grid-cols-2 gap-4">
-                                {ADVANCED_OPTIONS.filter(
-                                  (opt) => opt.type !== "checkbox",
-                                ).map((opt) => {
-                                  if (!opt.isVisible()) return;
+              </div>
+            )}
+          </div>
+          <div className="mt-6 flex items-center justify-end gap-3">
+            {isEditingVoiceInput ? (
+              <>
+                <Button
+                  className="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditingVoiceInput(false)}
+                >
+                  {" "}
+                  <X size={16} /> Cancel
+                </Button>
+                <Button
+                  className="gap-1.5"
+                  size="sm"
+                  onClick={() => {
+                    setFinalTranscript(editedVoiceInput);
+                    setIsEditingVoiceInput(false);
+                  }}
+                >
+                  {" "}
+                  <Check size={16} /> Confirm
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  disabled={isListening || isExtractingRTFFromTranscript}
+                  className="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFinalTranscript("");
+                  }}
+                >
+                  {" "}
+                  <Eraser size={16} /> Clear
+                </Button>
+                <Button
+                  disabled={isListening || isExtractingRTFFromTranscript}
+                  className="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditedVoiceInput(finalTranscript);
+                    setIsEditingVoiceInput(true);
+                  }}
+                >
+                  {" "}
+                  <Pen size={16} /> Edit
+                </Button>
+                <Button
+                  disabled={isExtractingRTFFromTranscript}
+                  variant="outline"
+                  className="gap-1.5"
+                  size="sm"
+                  onClick={isListening ? stopListening : startListening}
+                >
+                  {isListening ? <Stop size={16} /> : <Play size={16} />}{" "}
+                  {isListening ? "Stop" : "Start"}
+                </Button>
+                <Button
+                  disabled={
+                    isListening ||
+                    !finalTranscript.length ||
+                    isExtractingRTFFromTranscript
+                  }
+                  className="gap-1.5"
+                  size="sm"
+                  onClick={extractRTFFromTranscript}
+                >
+                  {" "}
+                  {isExtractingRTFFromTranscript ? (
+                    <Spinner size={16} className="animate-spin" />
+                  ) : (
+                    <Checks size={16} />
+                  )}{" "}
+                  Submit
+                </Button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      <div className="container max-w-7xl scroll-m-10" id="prompt-enhancer">
+        <div className="grid grid-cols-2 gap-10 shadow-lg rounded-3xl p-8 border bg-background">
+          <section>
+            <div className="flex justify-between items-center">
+              <h4 className="text-xl font-bold">Choose prompt Enhancer</h4>
+              <div>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="min-h-9 min-w-9 rounded-full"
+                  onClick={handleOnMicClick}
+                >
+                  <Microphone size={18} />
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-row gap-4 mt-6">
+                {FRAMEWORKS.map((framework) => (
+                  <button
+                    key={framework.name}
+                    className={cn(
+                      "bg-secondary text-base px-3 py-1 font-medium rounded-full",
+                      selectedPromptFramework === framework.name &&
+                        "bg-blue-500 text-white",
+                    )}
+                    onClick={() => {
+                      resetAllStates();
+                      setSelectedPromptFramework(framework.name);
+                    }}
+                  >
+                    {framework.name}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                                  switch (opt.type) {
-                                    case "select": {
-                                      return (
-                                        <div
-                                          key={opt.name}
-                                          className="col-span-1 space-y-1.5"
-                                        >
-                                          <Label htmlFor={opt.name}>
-                                            {opt.name}
-                                          </Label>
-                                          <Select
-                                            defaultValue={
-                                              opt.defaultValue as string
-                                            }
-                                            onValueChange={(v) =>
-                                              opt.onChange(v as never)
-                                            }
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue
-                                                placeholder={opt.placeholder}
-                                              />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {opt.options?.map((option) => (
-                                                <SelectItem
-                                                  key={option}
-                                                  value={option}
-                                                >
-                                                  {option}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                      );
-                                    }
-                                    case "text-input": {
-                                      return (
-                                        <div
-                                          key={opt.name}
-                                          className="col-span-2 space-y-1.5"
-                                        >
-                                          <Label htmlFor={opt.name}>
-                                            {opt.name}
-                                          </Label>
-                                          <Input
-                                            type={opt.type}
-                                            id={opt.name}
-                                            name={opt.name}
-                                            placeholder={opt.placeholder}
-                                            defaultValue={
-                                              opt.defaultValue as string
-                                            }
-                                            onChange={(e) =>
-                                              opt.onChange(
-                                                e.target.value as never,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      );
-                                    }
-                                    default:
-                                      return null;
-                                  }
-                                })}
-                              </div>
-                            )}
-                            {isAdvanceOptionsExpanded && (
-                              <div className="grid gap-3 mt-6">
-                                {ADVANCED_OPTIONS.filter(
-                                  (opt) => opt.type === "checkbox",
-                                ).map((opt) => {
-                                  if (!opt.isVisible()) return;
-                                  return (
-                                    <div
-                                      aria-label="conclusion"
-                                      className={cn(
-                                        "flex items-center space-x-2",
-                                      )}
-                                      key={opt.name}
-                                    >
-                                      <Checkbox
-                                        id={opt.name}
-                                        defaultChecked={
-                                          opt.defaultValue as boolean
-                                        }
-                                        onCheckedChange={(v) =>
-                                          opt.onChange(v as never)
-                                        }
-                                      />
-                                      <Label
-                                        htmlFor={opt.name}
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                      >
-                                        {opt.label}
-                                      </Label>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    }
-                    case "select": {
-                      return (
-                        <div key={el.name} className="col-span-1">
-                          <Label htmlFor={el.name}>{el.label}</Label>
+            <div className="mb-3 mt-4">
+              <p className="text-[13px] mb-2 font-medium">
+                Framework Description
+              </p>
+              <p className="text-sm text-foreground/80">
+                {
+                  FRAMEWORKS.find((x) => x.name === selectedPromptFramework)
+                    ?.description
+                }
+              </p>
+            </div>
+            <div className="mt-6">
+              <form onSubmit={handleSubmit}>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* custom fields */}
+                  {selectedPromptFramework === "RTF" && (
+                    <div className="flex flex-col gap-2">
+                      {isUsingCustomRole ? (
+                        <>
+                          {" "}
+                          <Label htmlFor="role">Role</Label>
+                          <Input
+                            type="text"
+                            id="role"
+                            name="role"
+                            placeholder="Facebook ad manager"
+                            autoComplete="off"
+                            value={data.role}
+                            onChange={(e) => {
+                              resetAllStates();
+                              setData((prev) => ({
+                                ...prev,
+                                role: e.target.value,
+                              }));
+                            }}
+                            ref={roleInputRef}
+                            required
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <Label htmlFor="role">Role</Label>
                           <Select
-                            defaultValue={el.defaultValue}
-                            onValueChange={(value) => el.onChange?.(value)}
+                            defaultValue={PREDEFINED_ROLES[0]}
+                            required
+                            onValueChange={(v) => {
+                              resetAllStates();
+                              setData((prev) => ({
+                                ...prev,
+                                role: v,
+                              }));
+                            }}
                           >
                             <SelectTrigger
-                              name={el.name}
-                              id={el.name}
-                              className="w-full"
+                              name="role"
+                              id="role"
+                              className="w-full !min-w-full"
                             >
-                              <SelectValue placeholder={el.placeholder} />
+                              <SelectValue
+                                placeholder="Role"
+                                className="w-full"
+                              />
                             </SelectTrigger>
                             <SelectContent>
-                              {/* @ts-expect-error */}
-                              {el.options?.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
+                              {PREDEFINED_ROLES.map((role) => (
+                                <SelectItem
+                                  key={`predefined-role//${role}`}
+                                  value={role}
+                                >
+                                  {role}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                        </div>
-                      );
+                        </>
+                      )}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="custom-role-checkbox"
+                          checked={isUsingCustomRole}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setIsUsingCustomRole(true);
+                              setData((prev) => ({ ...prev, role: "" }));
+                              setTimeout(() => {
+                                roleInputRef.current?.focus();
+                              }, 100);
+                            } else {
+                              setData((prev) => ({
+                                ...prev,
+                                role: PREDEFINED_ROLES[0],
+                              }));
+                              setIsUsingCustomRole(false);
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="custom-role-checkbox"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Use custom role
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                  {FRAMEWORKS.find(
+                    (frm) =>
+                      frm.name.toLowerCase() ===
+                      selectedPromptFramework.toLowerCase(),
+                  )?.form.elements.map((el) => {
+                    switch (el.type) {
+                      case "advance-options": {
+                        return (
+                          <div className="mt-4 col-span-2">
+                            <button
+                              type="button"
+                              className="text-sm text-blue-600 font-medium"
+                              onClick={() =>
+                                setIsAdvanceOptionsExpanded((prev) => !prev)
+                              }
+                            >
+                              Advance options{" "}
+                              <ChevronRightIcon
+                                className={cn(
+                                  "w-4 h-4 inline-block",
+                                  isAdvanceOptionsExpanded && "rotate-90",
+                                )}
+                              />
+                            </button>
+                            <div className="mt-4">
+                              {isAdvanceOptionsExpanded && (
+                                <div className="grid grid-cols-2 gap-4">
+                                  {ADVANCED_OPTIONS.filter(
+                                    (opt) => opt.type !== "checkbox",
+                                  ).map((opt) => {
+                                    if (!opt.isVisible()) return;
+
+                                    switch (opt.type) {
+                                      case "select": {
+                                        return (
+                                          <div
+                                            key={opt.name}
+                                            className="col-span-1 space-y-1.5"
+                                          >
+                                            <Label htmlFor={opt.name}>
+                                              {opt.name}
+                                            </Label>
+                                            <Select
+                                              defaultValue={
+                                                opt.defaultValue as string
+                                              }
+                                              onValueChange={(v) =>
+                                                opt.onChange(v as never)
+                                              }
+                                            >
+                                              <SelectTrigger>
+                                                <SelectValue
+                                                  placeholder={opt.placeholder}
+                                                />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {opt.options?.map((option) => (
+                                                  <SelectItem
+                                                    key={option}
+                                                    value={option}
+                                                  >
+                                                    {option}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                        );
+                                      }
+                                      case "text-input": {
+                                        return (
+                                          <div
+                                            key={opt.name}
+                                            className="col-span-2 space-y-1.5"
+                                          >
+                                            <Label htmlFor={opt.name}>
+                                              {opt.name}
+                                            </Label>
+                                            <Input
+                                              type={opt.type}
+                                              id={opt.name}
+                                              name={opt.name}
+                                              placeholder={opt.placeholder}
+                                              defaultValue={
+                                                opt.defaultValue as string
+                                              }
+                                              value={opt.value}
+                                              onChange={(e) =>
+                                                opt.onChange(
+                                                  e.target.value as never,
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                        );
+                                      }
+                                      default:
+                                        return null;
+                                    }
+                                  })}
+                                </div>
+                              )}
+                              {isAdvanceOptionsExpanded && (
+                                <div className="grid gap-3 mt-6">
+                                  {ADVANCED_OPTIONS.filter(
+                                    (opt) => opt.type === "checkbox",
+                                  ).map((opt) => {
+                                    if (!opt.isVisible()) return;
+                                    return (
+                                      <div
+                                        aria-label="conclusion"
+                                        className={cn(
+                                          "flex items-center space-x-2",
+                                        )}
+                                        key={opt.name}
+                                      >
+                                        <Checkbox
+                                          id={opt.name}
+                                          defaultChecked={
+                                            opt.defaultValue as boolean
+                                          }
+                                          onCheckedChange={(v) =>
+                                            opt.onChange(v as never)
+                                          }
+                                        />
+                                        <Label
+                                          htmlFor={opt.name}
+                                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                        >
+                                          {opt.label}
+                                        </Label>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                      case "select": {
+                        return (
+                          <div key={el.name} className="col-span-1">
+                            <Label htmlFor={el.name}>{el.label}</Label>
+                            <Select
+                              defaultValue={el.defaultValue}
+                              onValueChange={(value) => el.onChange?.(value)}
+                            >
+                              <SelectTrigger
+                                name={el.name}
+                                id={el.name}
+                                className="w-full"
+                              >
+                                <SelectValue placeholder={el.placeholder} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {/* @ts-expect-error */}
+                                {el.options?.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        );
+                      }
+                      case "text-input": {
+                        return (
+                          <div key={el.name} className="col-span-2">
+                            <Label htmlFor={el.name}>{el.label}</Label>
+                            <Input
+                              type={el.type}
+                              id={el.name}
+                              name={el.name}
+                              placeholder={el.placeholder}
+                              defaultValue={el.defaultValue}
+                              value={el.value}
+                              onChange={(e) => el.onChange?.(e.target.value)}
+                            />
+                          </div>
+                        );
+                      }
+                      case "textarea": {
+                        return (
+                          <div key={el.name} className="col-span-2">
+                            <Label htmlFor={el.name}>{el.label}</Label>
+                            <Textarea
+                              id={el.name}
+                              name={el.name}
+                              placeholder={el.placeholder}
+                              defaultValue={el.defaultValue}
+                              rows={el.minRows}
+                              value={el.value}
+                              onChange={(e) => el.onChange?.(e.target.value)}
+                            />
+                          </div>
+                        );
+                      }
+                      default:
+                        return null;
                     }
-                    case "text-input": {
-                      return (
-                        <div key={el.name} className="col-span-2">
-                          <Label htmlFor={el.name}>{el.label}</Label>
-                          <Input
-                            type={el.type}
-                            id={el.name}
-                            name={el.name}
-                            placeholder={el.placeholder}
-                            defaultValue={el.defaultValue}
-                            onChange={(e) => el.onChange?.(e.target.value)}
-                          />
-                        </div>
-                      );
-                    }
-                    case "textarea": {
-                      return (
-                        <div key={el.name} className="col-span-2">
-                          <Label htmlFor={el.name}>{el.label}</Label>
-                          <Textarea
-                            id={el.name}
-                            name={el.name}
-                            placeholder={el.placeholder}
-                            defaultValue={el.defaultValue}
-                            rows={el.minRows}
-                            onChange={(e) => el.onChange?.(e.target.value)}
-                          />
-                        </div>
-                      );
-                    }
-                    default:
-                      return null;
-                  }
-                })}
-              </div>
-              <div className="mt-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-500 data-[state=checked]:to-blue-500"
-                    id="humanize-response"
-                    checked={isHumanizeResponseEnabled}
-                    onCheckedChange={setIsHumanizeResponseEnabled}
-                  />
-                  <Label htmlFor="humanize-response">
-                    Humanize response{" "}
-                    <Badge variant="secondary">Recommended</Badge>
-                  </Label>
+                  })}
                 </div>
-              </div>
-              <div className="mt-4">
-                <SignedIn>
-                  <div className="space-y-2">
-                    <Button
-                      size="lg"
-                      className="bg-gradient-to-r from-purple-500 to-blue-500"
-                      type="submit"
-                    >
-                      <SparklesIcon className="h-4 w-4 mr-2" /> Enhance Prompt
-                    </Button>
-                    {!isSubscribed && (
-                      <Alert className="mt-2">
-                        {!isSubscribed && freeTokens > 0 ? (
-                          <>
-                            <Coins className="h-6 w-6" />
-                            <AlertDescription>
-                              You have {freeTokens} free generations left.
-                            </AlertDescription>
-                          </>
-                        ) : null}
-                        {!isSubscribed && freeTokens <= 0 && (
-                          <>
-                            <RocketLaunch className="h-4 w-4" />
-                            <AlertDescription>
-                              You are out of free credits please consider
-                              subscribing to any of the plans to continue.
-                            </AlertDescription>
-                          </>
-                        )}
-                      </Alert>
-                    )}
+                <div className="mt-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-500 data-[state=checked]:to-blue-500"
+                      id="humanize-response"
+                      checked={isHumanizeResponseEnabled}
+                      onCheckedChange={setIsHumanizeResponseEnabled}
+                    />
+                    <Label htmlFor="humanize-response">
+                      Humanize response{" "}
+                      <Badge variant="secondary">Recommended</Badge>
+                    </Label>
                   </div>
-                </SignedIn>
-                <SignedOut>
-                  <SignInButton>
-                    <Button
-                      size="lg"
-                      className="bg-gradient-to-r from-purple-500 to-blue-500"
-                      type="button"
-                    >
-                      <SparklesIcon className="h-4 w-4 mr-2" /> Sign in to
-                      Enhance Prompt
-                    </Button>
-                  </SignInButton>
-                  <Alert className="mt-2" variant="warning">
-                    <TriangleAlertIcon className="h-4 w-4" />
-                    <AlertDescription>
-                      You must be logged in to generate prompts.
-                    </AlertDescription>
-                  </Alert>
-                </SignedOut>
-              </div>
-            </form>
-          </div>
-        </section>
-        <section className="h-[600px] relative">
-          <div className="p-6 rounded-2xl border h-full overflow-y-auto space-y-4 relative">
-            {isOutputLoading && !output && (
-              <div className="p-5 rounded-xl bg-secondary/50 border">
-                <div className="flex flex-col gap-2">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
                 </div>
-              </div>
-            )}
-            {output &&
-              !histories.some(
-                (history: any) => history.response === output,
-              ) && (
-                <OutputCard
-                  output={output}
-                  className="bg-blue-500/10 border-blue-600/10 text-blue-800"
-                />
+                <div className="mt-4">
+                  <SignedIn>
+                    <div className="space-y-2">
+                      <Button
+                        size="lg"
+                        className="bg-gradient-to-r from-purple-500 to-blue-500"
+                        type="submit"
+                      >
+                        <SparklesIcon className="h-4 w-4 mr-2" /> Enhance Prompt
+                      </Button>
+                      {!isSubscribed && (
+                        <Alert className="mt-2">
+                          {!isSubscribed && freeTokens > 0 ? (
+                            <>
+                              <Coins className="h-6 w-6" />
+                              <AlertDescription>
+                                You have {freeTokens} free generations left.
+                              </AlertDescription>
+                            </>
+                          ) : null}
+                          {!isSubscribed && freeTokens <= 0 && (
+                            <>
+                              <RocketLaunch className="h-4 w-4" />
+                              <AlertDescription>
+                                You are out of free credits please consider
+                                subscribing to any of the plans to continue.
+                              </AlertDescription>
+                            </>
+                          )}
+                        </Alert>
+                      )}
+                    </div>
+                  </SignedIn>
+                  <SignedOut>
+                    <SignInButton>
+                      <Button
+                        size="lg"
+                        className="bg-gradient-to-r from-purple-500 to-blue-500"
+                        type="button"
+                      >
+                        <SparklesIcon className="h-4 w-4 mr-2" /> Sign in to
+                        Enhance Prompt
+                      </Button>
+                    </SignInButton>
+                    <Alert className="mt-2" variant="warning">
+                      <TriangleAlertIcon className="h-4 w-4" />
+                      <AlertDescription>
+                        You must be logged in to generate prompts.
+                      </AlertDescription>
+                    </Alert>
+                  </SignedOut>
+                </div>
+              </form>
+            </div>
+          </section>
+          <section className="h-[600px] relative">
+            <div className="p-6 rounded-2xl border h-full overflow-y-auto space-y-4 relative">
+              {isOutputLoading && !output && (
+                <div className="p-5 rounded-xl bg-secondary/50 border">
+                  <div className="flex flex-col gap-2">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
               )}
-            {histories?.map((history: any) => (
-              <OutputCard key={history.id} output={history.response} />
-            ))}
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-        </section>
+              {output &&
+                !histories.some(
+                  (history: any) => history.response === output,
+                ) && (
+                  <OutputCard
+                    output={output}
+                    className="bg-blue-500/10 border-blue-600/10 text-blue-800"
+                  />
+                )}
+              {histories?.map((history: any) => (
+                <OutputCard key={history.id} output={history.response} />
+              ))}
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+          </section>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -1152,15 +1429,3 @@ function OutputCard({
     </div>
   );
 }
-
-const PROMPTS = {
-  rtf: {
-    prompt: `Act as {Role}, now your task will be {Task} and the content you generate should be in {format}.`,
-  },
-  tag: {
-    prompt: `You are a proficient strategist in {task}. Your job is to {action}, with the goal of {goal}. Use the most relevant and current information to provide a thorough and accurate response. Ensure clarity and thoroughness in your output.`,
-  },
-  care: {
-    prompt: `You are a {role}, skilled in your domain. Your task is to {task}, ensuring high-quality content that is accurate, clear, and relevant. Deliver the output in {format}, ensuring that it meets the highest standards. For instance, when asked to {specific task}, your response should be detailed yet concise.`,
-  },
-};
