@@ -67,7 +67,7 @@ function useVoice({ enabled }: { enabled: boolean }) {
     };
   }, [enabled]);
 
-  return { volume, isSpeaking };
+  return { volume: parseFloat(volume.toFixed(3)), isSpeaking };
 }
 
 export default useVoice;

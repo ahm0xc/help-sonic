@@ -112,17 +112,16 @@ export default function PromptEnhancerV2({
     useState(false);
   const [siriWaveConfig, setSiriWaveConfig] = useState<IReactSiriwaveProps>({
     theme: "ios9",
-    ratio: 1,
-    speed: 0.08,
+    // ratio: 1,
+    speed: 0.000001,
     amplitude: 1,
-    frequency: 6,
     color: "#000",
     cover: false,
     width: 300,
     height: 100,
     autostart: true,
-    pixelDepth: 1,
-    lerpSpeed: 0.1,
+    pixelDepth: 0.1,
+    // lerpSpeed: 0.0001,
   });
 
   const { isSpeaking, volume: volumeLevel } = useVoice({
@@ -840,7 +839,7 @@ USER: Here are the details that the generated prompt should include\n
   useEffect(() => {
     setSiriWaveConfig((prevConfig) => ({
       ...prevConfig,
-      amplitude: isListening ? (volumeLevel > 0.01 ? volumeLevel * 500 : 0) : 0,
+      amplitude: isListening ? (volumeLevel > 0.02 ? volumeLevel * 255 : 0) : 0,
       // speed: isListening ? (volumeLevel > 0.5 ? volumeLevel * 5 : 0) : 0,
       // this frequency is only available in ios style
       // frequency: isListening
