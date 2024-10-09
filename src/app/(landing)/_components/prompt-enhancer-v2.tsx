@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs";
 import {
   ChevronRightIcon,
@@ -110,25 +110,24 @@ export default function PromptEnhancerV2({
   const [editedVoiceInput, setEditedVoiceInput] = useState("");
   const [isExtractingRTFFromTranscript, setIsExtractingRTFFromTranscript] =
     useState(false);
-  const [siriWaveConfig, setSiriWaveConfig] = useState<IReactSiriwaveProps>({
-    theme: "ios9",
-    // ratio: 1,
-    speed: 0.000001,
-    amplitude: 1,
-    color: "#000",
-    cover: false,
-    width: 300,
-    height: 100,
-    autostart: true,
-    pixelDepth: 0.1,
-    // lerpSpeed: 0.0001,
-  });
+  // const [siriWaveConfig, setSiriWaveConfig] = useState<IReactSiriwaveProps>({
+  //   theme: "ios9",
+  //   // ratio: 1,
+  //   speed: 0.2,
+  //   amplitude: 1,
+  //   color: "#000",
+  //   cover: false,
+  //   width: 300,
+  //   height: 200,
+  //   autostart: true,
+  //   pixelDepth: 0.01,
+  //   // lerpSpeed: 0.0001,
+  // });
 
   const { isSpeaking, volume: volumeLevel } = useVoice({
     enabled: isListening,
   });
 
-  console.log({ isSpeaking, volume: volumeLevel });
   const recognitionRef = useRef<any>(null);
 
   const [data, setData] = useState<Data>({
@@ -836,21 +835,21 @@ USER: Here are the details that the generated prompt should include\n
   //   }
   // }, [isMicModalOpen]);
 
-  useEffect(() => {
-    setSiriWaveConfig((prevConfig) => ({
-      ...prevConfig,
-      amplitude: isListening ? (volumeLevel > 0.02 ? volumeLevel * 255 : 0) : 0,
-      // speed: isListening ? (volumeLevel > 0.5 ? volumeLevel * 5 : 0) : 0,
-      // this frequency is only available in ios style
-      // frequency: isListening
-      //   ? volumeLevel > 0.01
-      //     ? volumeLevel * 10
-      //     : 0
-      //   : volumeLevel > 0.5
-      //     ? volumeLevel * 20
-      //     : 0,
-    }));
-  }, [volumeLevel, isListening]);
+  // useEffect(() => {
+  //   setSiriWaveConfig((prevConfig) => ({
+  //     ...prevConfig,
+  //     amplitude: isListening ? (volumeLevel > 0.02 ? volumeLevel * 255 : 0) : 0,
+  //     // speed: isListening ? (volumeLevel > 0.5 ? volumeLevel * 5 : 0) : 0,
+  //     // this frequency is only available in ios style
+  //     // frequency: isListening
+  //     //   ? volumeLevel > 0.01
+  //     //     ? volumeLevel * 10
+  //     //     : 0
+  //     //   : volumeLevel > 0.5
+  //     //     ? volumeLevel * 20
+  //     //     : 0,
+  //   }));
+  // }, [volumeLevel, isListening]);
 
   return (
     <>
@@ -865,7 +864,18 @@ USER: Here are the details that the generated prompt should include\n
           </div>
           <div className="py-3">
             <div className="w-fit mx-auto">
-              <Siriwave {...siriWaveConfig} />
+              <Siriwave
+                theme="ios"
+                // speed={0.2}
+                // amplitude={isSpeaking ? 2 : 0}
+                // curveDefinition={[{}]}
+                color="#000"
+                // cover={false}
+                width={300}
+                height={100}
+                // autostart
+                // pixelDepth={0.1}
+              />
             </div>
           </div>
           <div className="mt-0">

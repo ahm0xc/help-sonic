@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { ClerkProvider } from "@clerk/nextjs";
+import PlausibleProvider from "next-plausible";
 
 import { cn } from "~/lib/utils";
 import { Toaster } from "~/components/ui/sonner";
@@ -24,6 +25,9 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
+        <head>
+          <PlausibleProvider domain="helpsonic.com" />
+        </head>
         <body className={cn("antialiased font-sans", fontSans.variable)}>
           <QueryProvider>
             {children}
