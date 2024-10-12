@@ -616,7 +616,8 @@ export default function PromptEnhancerV2({
   // }
 
   function handleOnMicClick() {
-    setMicModalType("automatic-prompt");
+    setMicModalType("voice-assistant");
+    setIsEditingVoiceInput(false);
     if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
       setIsMicModalOpen(true);
       const SpeechRecognition =
