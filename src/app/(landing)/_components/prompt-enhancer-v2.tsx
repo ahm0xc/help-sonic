@@ -13,7 +13,6 @@ import { readStreamableValue, StreamableValue } from "ai/rsc";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import Siriwave, { IReactSiriwaveProps } from "react-siriwave";
 import {
   Check,
   Checks,
@@ -21,6 +20,7 @@ import {
   Eraser,
   Microphone,
   Pen,
+  PencilSimple,
   Play,
   RocketLaunch,
   Spinner,
@@ -49,6 +49,7 @@ import decrementFreeToken, { extractRTFFromText } from "~/actions";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "~/components/ui/dialog";
 import useVoice from "~/hooks/use-voice";
+import MemoizedSiriWave from "~/components/memoized-siri-wave";
 
 const PREDEFINED_ROLES = [
   "SEO Blog Writer",
@@ -110,6 +111,9 @@ export default function PromptEnhancerV2({
   const [editedVoiceInput, setEditedVoiceInput] = useState("");
   const [isExtractingRTFFromTranscript, setIsExtractingRTFFromTranscript] =
     useState(false);
+  const [micModalType, setMicModalType] = useState<
+    "voice-assistant" | "automatic-prompt"
+  >("voice-assistant");
   // const [siriWaveConfig, setSiriWaveConfig] = useState<IReactSiriwaveProps>({
   //   theme: "ios9",
   //   // ratio: 1,
@@ -124,9 +128,9 @@ export default function PromptEnhancerV2({
   //   // lerpSpeed: 0.0001,
   // });
 
-  const { isSpeaking, volume: volumeLevel } = useVoice({
-    enabled: isListening,
-  });
+  // const { isSpeaking, volume: volumeLevel } = useVoice({
+  //   enabled: isListening,
+  // });
 
   const recognitionRef = useRef<any>(null);
 
@@ -612,6 +616,7 @@ export default function PromptEnhancerV2({
   // }
 
   function handleOnMicClick() {
+    setMicModalType("automatic-prompt");
     if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
       setIsMicModalOpen(true);
       const SpeechRecognition =
@@ -710,6 +715,13 @@ export default function PromptEnhancerV2({
       ...prev,
       format: obj.format,
     }));
+  }
+
+  function showAutomaticPromptModal() {
+    setMicModalType("automatic-prompt");
+    setFinalTranscript("");
+    setIsMicModalOpen(true);
+    setIsEditingVoiceInput(true);
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -856,15 +868,21 @@ USER: Here are the details that the generated prompt should include\n
       <Dialog open={isMicModalOpen} onOpenChange={setIsMicModalOpen}>
         <DialogContent>
           <div className="flex items-center justify-between">
-            <h3>Voice assistant</h3>
-            <span className="text-xs font-medium italic">
-              <span className="not-italic">status: </span>
-              {micStatus}
-            </span>
+            <h3>
+              {micModalType === "voice-assistant"
+                ? "Voice assistant"
+                : "Automatic Prompt Input"}
+            </h3>
+            {micStatus && (
+              <span className="text-xs font-medium italic">
+                <span className="not-italic">status: </span>
+                {micStatus}
+              </span>
+            )}
           </div>
           <div className="py-3">
             <div className="w-fit mx-auto">
-              <Siriwave
+              <MemoizedSiriWave
                 theme="ios"
                 // speed={0.2}
                 // amplitude={isSpeaking ? 2 : 0}
@@ -912,7 +930,14 @@ USER: Here are the details that the generated prompt should include\n
                   className="gap-1.5"
                   variant="outline"
                   size="sm"
-                  onClick={() => setIsEditingVoiceInput(false)}
+                  onClick={
+                    micModalType === "voice-assistant"
+                      ? () => setIsEditingVoiceInput(false)
+                      : () => {
+                          setIsMicModalOpen(false);
+                          setFinalTranscript("");
+                        }
+                  }
                 >
                   {" "}
                   <X size={16} /> Cancel
@@ -923,6 +948,7 @@ USER: Here are the details that the generated prompt should include\n
                   onClick={() => {
                     setFinalTranscript(editedVoiceInput);
                     setIsEditingVoiceInput(false);
+                    setMicModalType("voice-assistant");
                   }}
                 >
                   {" "}
@@ -994,7 +1020,15 @@ USER: Here are the details that the generated prompt should include\n
           <section>
             <div className="flex justify-between items-center">
               <h4 className="text-xl font-bold">Choose prompt Enhancer</h4>
-              <div>
+              <div className="flex gap-2 items-center">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="min-h-9 min-w-9 rounded-full"
+                  onClick={showAutomaticPromptModal}
+                >
+                  <PencilSimple size={18} />
+                </Button>
                 <Button
                   size="icon"
                   variant="outline"
