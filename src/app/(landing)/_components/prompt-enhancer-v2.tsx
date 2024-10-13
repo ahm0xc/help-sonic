@@ -762,8 +762,9 @@ export default function PromptEnhancerV2({
           await generate(`SYSTEM: You are a powerful prompt enhancer who writes a prompt by the user given information\n
 INSTRUCTIONS:\n
 - only return the enhanced prompt\n
-- take the role and say like 'Act as {role}', 'Be {role}' or you can come up with something good
+- take the role and say like 'Act as {role}', 'Be {role}' or you can come up with something good\n
 - ignore the values that aren't defined in the prompt\n
+- never give back the answer, always return a generated prompt based on user needs that user can put on gpt and get back answer from there\n
 USER: Here are the details that the generated prompt should include\n
 - task is: ${data.task}\n
 - role is: ${data.role}\n
