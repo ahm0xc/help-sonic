@@ -16,6 +16,10 @@ export default function ImprintPage() {
           Vinnytsya district,
           <br />
           Ukraine 23252
+          <br />
+          <a href="mailto:viaggissimo4455@gmail.com">
+            viaggissimo4455@gmail.com
+          </a>
         </p>
         <p>Sources for the images and graphics used:</p>
         <p>own, www.pexels.com, unsplash.com</p>
