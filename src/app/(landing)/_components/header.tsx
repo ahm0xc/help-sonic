@@ -15,6 +15,9 @@ function Header() {
           <Link href="/#prompt-enhancer" className="hover:text-blue-500">
             Prompt Enhancer
           </Link>
+          <Link href="/hub" className="hover:text-blue-500">
+            Prompt Hub
+          </Link>
           <Link href="/pricing" className="hover:text-blue-500">
             Pricing
           </Link>
