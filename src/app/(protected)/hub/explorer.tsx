@@ -115,7 +115,13 @@ export default function Explorer({
               />
             </div>
             <div className="flex items-center gap-3">
-              <Select value={topic} onValueChange={setTopic}>
+              <Select
+                value={topic}
+                onValueChange={(v) => {
+                  setPage(0);
+                  setTopic(v);
+                }}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Select a Topic" />
                 </SelectTrigger>
@@ -130,7 +136,13 @@ export default function Explorer({
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <Select value={activity} onValueChange={setActivity}>
+              <Select
+                value={activity}
+                onValueChange={(v) => {
+                  setPage(0);
+                  setActivity(v);
+                }}
+              >
                 <SelectTrigger className="w-[280px]">
                   <SelectValue placeholder="Select a Activity" />
                 </SelectTrigger>
