@@ -29,7 +29,7 @@ interface ImportedData {
   ForkedFromPromptID?: string;
 }
 
-type Data = {
+export type Data = {
   models: string[];
   title: string;
   prompt: string;
