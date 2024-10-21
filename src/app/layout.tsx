@@ -9,6 +9,7 @@ import QueryProvider from "~/components/query-provider";
 
 import "./globals.css";
 import CookieBanner from "~/components/cookie-banner";
+import { TooltipProvider } from "~/components/ui/tooltip";
 
 const fontSans = GeistSans;
 
@@ -30,7 +31,7 @@ export default function RootLayout({
         </head>
         <body className={cn("antialiased font-sans", fontSans.variable)}>
           <QueryProvider>
-            {children}
+            <TooltipProvider>{children}</TooltipProvider>
             <CookieBanner />
             <Toaster richColors position="top-right" />
           </QueryProvider>

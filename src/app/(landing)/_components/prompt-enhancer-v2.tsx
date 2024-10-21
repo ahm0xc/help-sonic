@@ -24,6 +24,7 @@ import {
   Play,
   RocketLaunch,
   Spinner,
+  StarFour,
   Stop,
   X,
 } from "@phosphor-icons/react";
@@ -50,6 +51,11 @@ import { useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "~/components/ui/dialog";
 import useVoice from "~/hooks/use-voice";
 import MemoizedSiriWave from "~/components/memoized-siri-wave";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 const PREDEFINED_ROLES = [
   "SEO Blog Writer",
@@ -660,7 +666,7 @@ export default function PromptEnhancerV2({
         toast.error(event.error, {
           description: "Please make sure you granted mic permissions",
         });
-        console.error(event.error);
+        console.error(event);
       };
 
       startListening();
@@ -870,11 +876,18 @@ USER: Here are the details that the generated prompt should include\n
       <Dialog open={isMicModalOpen} onOpenChange={setIsMicModalOpen}>
         <DialogContent>
           <div className="flex items-center justify-between">
-            <h3>
-              {micModalType === "voice-assistant"
-                ? "Voice assistant"
-                : "Automatic Prompt Input"}
-            </h3>
+            <div>
+              <h3 className="font-medium">
+                {micModalType === "voice-assistant"
+                  ? "Voice assistant"
+                  : "Automatic Prompt Input"}
+              </h3>
+              <p className="text-sm text-foreground/80 mt-0.5">
+                {micModalType === "voice-assistant"
+                  ? "Automatically fill up fields from voice transcript"
+                  : "Automatically detects the field input from text. This can be useful for creating prompts that are more personalized and engaging."}{" "}
+              </p>
+            </div>
             {micStatus && (
               <span className="text-xs font-medium italic">
                 <span className="not-italic">status: </span>
@@ -1023,22 +1036,40 @@ USER: Here are the details that the generated prompt should include\n
             <div className="flex justify-between items-center">
               <h4 className="text-xl font-bold">Choose prompt Enhancer</h4>
               <div className="flex gap-2 items-center">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="min-h-9 min-w-9 rounded-full"
-                  onClick={showAutomaticPromptModal}
-                >
-                  <PencilSimple size={18} />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="min-h-9 min-w-9 rounded-full"
-                  onClick={handleOnMicClick}
-                >
-                  <Microphone size={18} />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="min-h-9 min-w-9 rounded-full"
+                      onClick={showAutomaticPromptModal}
+                    >
+                      <StarFour size={18} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-md">
+                      Automatically detects the field input from text. This can
+                      be useful for creating prompts that are more personalized
+                      and engaging.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="min-h-9 min-w-9 rounded-full"
+                      onClick={handleOnMicClick}
+                    >
+                      <Microphone size={18} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Automatically fill up fields from voice transcript</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
             <div className="flex items-center justify-between">
