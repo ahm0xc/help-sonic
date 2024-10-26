@@ -29,6 +29,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
+import { CopyIcon, Expand, ExpandIcon, Maximize2Icon } from "lucide-react";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 export const PROMPT_PER_PAGE = 10;
 
@@ -111,7 +122,10 @@ export default function Explorer({
                 className="w-full min-w-full md:w-[300px] rounded-xl h-11"
                 placeholder="Search prompts.."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(0);
+                }}
               />
             </div>
             <div className="flex items-center gap-3">
@@ -191,10 +205,10 @@ export default function Explorer({
                 key={`prompt-${prompt.title}`}
                 className="w-full p-6 rounded-2xl border bg-gradient-to-br from-secondary/80 to-secondary/40 relative"
               >
-                <CopyButton
-                  text={prompt.prompt}
-                  className="absolute top-4 right-4"
-                />
+                <div className="flex items-center gap-2 absolute top-4 right-4">
+                  <CopyButton text={prompt.prompt} />
+                  <ExpandPromptButton prompt={prompt.prompt} />
+                </div>
                 <p className="text-lg">{prompt.title}</p>
                 <p className="mt-1 text-xs text-foreground/60 capitalize">
                   {activity}/{topic}
@@ -211,8 +225,8 @@ export default function Explorer({
                     ))}
                   </div>
                 ) : null}
-                <p className="mt-2.5 text-sm text-foreground line-clamp-4">
-                  {prompt.prompt_preview}
+                <p className="mt-2.5 text-sm text-foreground/70 line-clamp-4">
+                  {prompt.prompt_preview}..
                 </p>
               </div>
             );
@@ -248,6 +262,59 @@ export default function Explorer({
   );
 }
 
+function ExpandPromptButton({
+  prompt,
+  className,
+}: {
+  prompt: string;
+  className?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const Icon = copied ? Check : CopyIcon;
+
+  return (
+    <Dialog>
+      <DialogTrigger>
+        <button
+          type="button"
+          className={cn(
+            "text-xs gap-1 py-0.5 px-1 rounded-sm hover:bg-neutral-200/80 duration-200 flex items-center justify-center",
+            className,
+          )}
+        >
+          <Maximize2Icon className="size-3" />
+        </button>
+      </DialogTrigger>
+      <DialogContent hasCloseButton className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Prompt Preview</DialogTitle>
+        </DialogHeader>
+        <ScrollArea className="mt-4 h-[500px]">
+          <p className="whitespace-pre-line">{prompt}</p>
+        </ScrollArea>
+        <DialogFooter>
+          <DialogClose>
+            <Button variant="outline">Close</Button>
+          </DialogClose>
+          <Button
+            className="gap-2 items-center"
+            onClick={() => {
+              navigator.clipboard.writeText(prompt);
+              setCopied(true);
+
+              setTimeout(() => setCopied(false), 2000);
+            }}
+          >
+            <Icon className="size-3" />
+            <p>{copied ? "Copied" : "Copy"}</p>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function CopyButton({ text, className }: { text: string; className?: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -262,11 +329,12 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
         setTimeout(() => setCopied(false), 2000);
       }}
       className={cn(
-        "h-5 w-5 rounded-sm hover:bg-neutral-200/80 duration-200 flex items-center justify-center",
+        "text-[10px] gap-1 py-0.5 px-1 rounded-sm hover:bg-neutral-200/80 duration-200 flex items-center justify-center",
         className,
       )}
     >
       <Icon className="size-3" />
+      {/* <p>{copied ? "Copied" : "Copy prompt"}</p> */}
     </button>
   );
 }
