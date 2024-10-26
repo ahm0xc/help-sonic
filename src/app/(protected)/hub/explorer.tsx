@@ -40,6 +40,7 @@ import {
 } from "~/components/ui/dialog";
 import { CopyIcon, Expand, ExpandIcon, Maximize2Icon } from "lucide-react";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { toast } from "sonner";
 
 export const PROMPT_PER_PAGE = 10;
 
@@ -203,12 +204,12 @@ export default function Explorer({
             return (
               <div
                 key={`prompt-${prompt.title}`}
-                className="w-full p-6 rounded-2xl border bg-gradient-to-br from-secondary/80 to-secondary/40 relative"
+                className="w-full p-6 rounded-2xl border bg-gradient-to-br from-secondary/80 to-secondary/40 relative flex flex-col h-full"
               >
-                <div className="flex items-center gap-2 absolute top-4 right-4">
+                {/* <div className="flex items-center gap-2 absolute top-4 right-4">
                   <CopyButton text={prompt.prompt} />
                   <ExpandPromptButton prompt={prompt.prompt} />
-                </div>
+                </div> */}
                 <p className="text-lg">{prompt.title}</p>
                 <p className="mt-1 text-xs text-foreground/60 capitalize">
                   {activity}/{topic}
@@ -228,6 +229,26 @@ export default function Explorer({
                 <p className="mt-2.5 text-sm text-foreground/70 line-clamp-4">
                   {prompt.prompt_preview}..
                 </p>
+                <div className="pt-4 mt-auto flex items-center justify-start">
+                  <ExpandPromptButton prompt={prompt.prompt}>
+                    <Button
+                      size="sm"
+                      className="gap-2 bg-blue-600 text-white hover:bg-blue-600/80 duration-300 px-4 rounded-full"
+                    >
+                      <ExpandIcon className="size-3" /> View Prompt
+                    </Button>
+                  </ExpandPromptButton>
+                  <Button
+                    size="sm"
+                    className="gap-2 bg-blue-600 text-white hover:bg-blue-600/80 duration-300 px-4 rounded-full ml-2"
+                    onClick={() => {
+                      window.navigator.clipboard.writeText(prompt.prompt);
+                      toast.success("Copied to clipboard");
+                    }}
+                  >
+                    <CopyIcon className="size-3" /> Copy Prompt
+                  </Button>
+                </div>
               </div>
             );
           })}
@@ -265,9 +286,11 @@ export default function Explorer({
 function ExpandPromptButton({
   prompt,
   className,
+  children,
 }: {
   prompt: string;
   className?: string;
+  children?: React.ReactNode;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -276,15 +299,17 @@ function ExpandPromptButton({
   return (
     <Dialog>
       <DialogTrigger>
-        <button
-          type="button"
-          className={cn(
-            "text-xs gap-1 py-0.5 px-1 rounded-sm hover:bg-neutral-200/80 duration-200 flex items-center justify-center",
-            className,
-          )}
-        >
-          <Maximize2Icon className="size-3" />
-        </button>
+        {children ?? (
+          <button
+            type="button"
+            className={cn(
+              "text-xs gap-1 py-0.5 px-1 rounded-sm hover:bg-neutral-200/80 duration-200 flex items-center justify-center",
+              className,
+            )}
+          >
+            <Maximize2Icon className="size-3" />
+          </button>
+        )}
       </DialogTrigger>
       <DialogContent hasCloseButton className="max-w-xl">
         <DialogHeader>
@@ -295,10 +320,12 @@ function ExpandPromptButton({
         </ScrollArea>
         <DialogFooter>
           <DialogClose>
-            <Button variant="outline">Close</Button>
+            <Button variant="outline" className="rounded-full px-4">
+              Close
+            </Button>
           </DialogClose>
           <Button
-            className="gap-2 items-center"
+            className="gap-2 bg-blue-600 text-white hover:bg-blue-600/80 duration-300 px-4 rounded-full ml-2"
             onClick={() => {
               navigator.clipboard.writeText(prompt);
               setCopied(true);
