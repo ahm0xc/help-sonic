@@ -17,9 +17,7 @@ export default function ImprintPage() {
           <br />
           Ukraine 23252
           <br />
-          <a href="mailto:viaggissimo4455@gmail.com">
-            viaggissimo4455@gmail.com
-          </a>
+          <a href="mailto:info.helpsonic@gmail.com">info.helpsonic@gmail.com</a>
         </p>
         <p>Sources for the images and graphics used:</p>
         <p>own, www.pexels.com, unsplash.com</p>
