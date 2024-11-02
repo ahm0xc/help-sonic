@@ -1432,7 +1432,13 @@ USER: Here are the details that the generated prompt should include\n
                             <>
                               <Coins className="h-6 w-6" />
                               <AlertDescription>
-                                You have {freeTokens} free generations left.
+                                You have {freeTokens} free generations left.{" "}
+                                <Link
+                                  href="/pricing"
+                                  className="text-blue-500 underline"
+                                >
+                                  Get PRO
+                                </Link>
                               </AlertDescription>
                             </>
                           ) : null}

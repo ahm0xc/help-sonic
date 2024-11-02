@@ -1,30 +1,58 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
 
 import { Button } from "~/components/ui/button";
 import { pricingPlans } from "~/config/pricing";
+import { cn } from "~/lib/utils";
 
-export default function BuyButton({ isSubscribed }: { isSubscribed: boolean }) {
+export default function BuyButton({
+  isSubscribed,
+  link,
+}: {
+  isSubscribed: boolean;
+  link: string;
+}) {
   const { user, isLoaded } = useUser();
+
+  if (!isLoaded) return null;
+
+  if (!user) {
+    return (
+      <SignInButton>
+        <Button
+          type="button"
+          size="lg"
+          className="bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xl h-14 rounded-xl"
+        >
+          Sign in to purchase
+        </Button>
+      </SignInButton>
+    );
+  }
+
   return (
     <Button
       type="button"
       size="lg"
-      className="bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xl h-14 rounded-xl"
-      disabled={isSubscribed || !isLoaded}
+      className={cn(
+        "bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xl h-14 rounded-xl",
+        isSubscribed && "from-neutral-900 to-neutral-950",
+      )}
       asChild
     >
       <a
-        href={getFormattedPaymentLink(
-          pricingPlans[0].links[
-            process.env.NODE_ENV === "development" ? "dev" : "live"
-          ],
-          user?.emailAddresses[0].emailAddress ?? "",
-        )}
+        href={
+          isSubscribed
+            ? process.env.NEXT_PUBLIC_BILLING_PORTAL_URL!
+            : getFormattedPaymentLink(
+                link!,
+                user?.emailAddresses[0].emailAddress ?? "",
+              )
+        }
       >
         {isSubscribed ? (
-          <span>You are already subscribed</span>
+          <span>Manage Subscription</span>
         ) : (
           <span>{pricingPlans[0].cta}</span>
         )}

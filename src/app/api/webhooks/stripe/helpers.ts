@@ -60,8 +60,11 @@ export function getCustomerEmail(subscription: Stripe.Subscription): string {
 
 export function getCurrentPlan(subscription: Stripe.Subscription): string {
   const priceId = subscription.items.data[0].plan.id;
-  if (priceId === process.env.PRICE_ID_SUB_BASE_PLAN) {
-    return "base";
+  if (priceId === process.env.PRICE_ID_SUB_PRO_PLAN_MONTHLY) {
+    return "PRO/MONTHLY";
+  }
+  if (priceId === process.env.PRICE_ID_SUB_PRO_PLAN_YEARLY) {
+    return "PRO/YEARLY";
   }
   //   else if (priceId === process.env.PRICE_ID_SUBSCRIBER_PRO) {
   //     return "PRO";
@@ -79,6 +82,8 @@ export async function updateSubscribedUser(
   const nextInvoiceDate = subscription.cancel_at_period_end
     ? null
     : new Date(subscription.current_period_end * 1000);
+
+  console.log("🐸", { customerEmail, subscriptionType });
 
   await db
     .update(users)
