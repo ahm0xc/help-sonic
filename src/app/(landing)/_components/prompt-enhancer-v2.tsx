@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs";
 import {
   ChevronRightIcon,
@@ -20,12 +20,12 @@ import {
   Eraser,
   Microphone,
   Pen,
-  PencilSimple,
   Play,
   RocketLaunch,
   Spinner,
   StarFour,
   Stop,
+  User,
   X,
 } from "@phosphor-icons/react";
 
@@ -48,8 +48,13 @@ import { generate, saveHistory } from "../_actions";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import decrementFreeToken, { extractRTFFromText } from "~/actions";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent } from "~/components/ui/dialog";
-import useVoice from "~/hooks/use-voice";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 import MemoizedSiriWave from "~/components/memoized-siri-wave";
 import {
   Tooltip,
@@ -169,7 +174,7 @@ export default function PromptEnhancerV2({
 
   const roleInputRef = useRef<HTMLInputElement>(null);
 
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
 
   const { data: histories } = useQuery({
     queryKey: ["histories"],
@@ -622,6 +627,11 @@ export default function PromptEnhancerV2({
   // }
 
   function handleOnMicClick() {
+    if (!isSignedIn) {
+      setIsMicModalOpen(true);
+      return;
+    }
+
     setMicModalType("voice-assistant");
     setIsEditingVoiceInput(false);
     if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
@@ -892,171 +902,174 @@ USER: Here are the details that the generated prompt should include\n
           setIsMicModalOpen(bool);
         }}
       >
-        <DialogContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">
-                {micModalType === "voice-assistant"
-                  ? "Voice assistant"
-                  : "Automatic Prompt Input"}
-              </h3>
-              <p className="text-sm text-foreground/80 mt-0.5">
-                {micModalType === "voice-assistant"
-                  ? "Automatically fill up fields from voice transcript"
-                  : "Automatically detects the field input from text. This can be useful for creating prompts that are more personalized and engaging."}{" "}
-              </p>
-            </div>
-            {micStatus && (
-              <span className="text-xs font-medium italic">
-                <span className="not-italic">status: </span>
-                {micStatus}
-              </span>
-            )}
-          </div>
-          <div className="py-3">
-            <div className="w-fit mx-auto">
-              <MemoizedSiriWave
-                theme="ios"
-                // speed={0.2}
-                // amplitude={isSpeaking ? 2 : 0}
-                // curveDefinition={[{}]}
-                color="#000"
-                // cover={false}
-                width={300}
-                height={100}
-                // autostart
-                // pixelDepth={0.1}
-              />
-            </div>
-          </div>
-          <div className="mt-0">
-            {isEditingVoiceInput ? (
+        {isSignedIn && (
+          <DialogContent>
+            <div className="flex items-center justify-between">
               <div>
-                <Textarea
-                  className="bg-secondary p-4 rounded-lg border"
-                  rows={5}
-                  value={editedVoiceInput}
-                  onChange={(e) => setEditedVoiceInput(e.target.value)}
+                <h3 className="font-medium">
+                  {micModalType === "voice-assistant"
+                    ? "Voice assistant"
+                    : "Automatic Prompt Input"}
+                </h3>
+                <p className="text-sm text-foreground/80 mt-0.5">
+                  {micModalType === "voice-assistant"
+                    ? "Automatically fill up fields from voice transcript"
+                    : "Automatically detects the field input from text. This can be useful for creating prompts that are more personalized and engaging."}{" "}
+                </p>
+              </div>
+              {micStatus && (
+                <span className="text-xs font-medium italic">
+                  <span className="not-italic">status: </span>
+                  {micStatus}
+                </span>
+              )}
+            </div>
+            <div className="py-3">
+              <div className="w-fit mx-auto">
+                <MemoizedSiriWave
+                  theme="ios"
+                  // speed={0.2}
+                  // amplitude={isSpeaking ? 2 : 0}
+                  // curveDefinition={[{}]}
+                  color="#000"
+                  // cover={false}
+                  width={300}
+                  height={100}
+                  // autostart
+                  // pixelDepth={0.1}
                 />
               </div>
-            ) : (
-              <div className="bg-secondary p-4 rounded-lg border">
-                {finalTranscript.length || interimTranscript.length ? (
-                  <div className="text-sm font-medium">
-                    {finalTranscript}
-                    <i className="text-foreground/70 font-normal">
-                      {interimTranscript}
+            </div>
+            <div className="mt-0">
+              {isEditingVoiceInput ? (
+                <div>
+                  <Textarea
+                    className="bg-secondary p-4 rounded-lg border"
+                    rows={5}
+                    value={editedVoiceInput}
+                    onChange={(e) => setEditedVoiceInput(e.target.value)}
+                  />
+                </div>
+              ) : (
+                <div className="bg-secondary p-4 rounded-lg border">
+                  {finalTranscript.length || interimTranscript.length ? (
+                    <div className="text-sm font-medium">
+                      {finalTranscript}
+                      <i className="text-foreground/70 font-normal">
+                        {interimTranscript}
+                      </i>
+                    </div>
+                  ) : (
+                    <i className="text-foreground/70 text-sm">
+                      try saying somethings..
                     </i>
-                  </div>
-                ) : (
-                  <i className="text-foreground/70 text-sm">
-                    try saying somethings..
-                  </i>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="mt-6 flex items-center justify-end gap-3">
-            {isEditingVoiceInput ? (
-              <>
-                <Button
-                  className="gap-1.5"
-                  variant="outline"
-                  size="sm"
-                  onClick={
-                    micModalType === "voice-assistant"
-                      ? () => setIsEditingVoiceInput(false)
-                      : () => {
-                          setIsMicModalOpen(false);
-                          setFinalTranscript("");
-                        }
-                  }
-                >
-                  {" "}
-                  <X size={16} /> Cancel
-                </Button>
-                <Button
-                  className="gap-1.5"
-                  size="sm"
-                  disabled={isExtractingRTFFromTranscript}
-                  onClick={() => {
-                    if (micModalType === "automatic-prompt") {
-                      handleAutomaticFormSubmission();
-                    } else {
-                      setFinalTranscript(editedVoiceInput);
-                      setIsEditingVoiceInput(false);
-                      setMicModalType("voice-assistant");
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              {isEditingVoiceInput ? (
+                <>
+                  <Button
+                    className="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    onClick={
+                      micModalType === "voice-assistant"
+                        ? () => setIsEditingVoiceInput(false)
+                        : () => {
+                            setIsMicModalOpen(false);
+                            setFinalTranscript("");
+                          }
                     }
-                  }}
-                >
-                  {" "}
-                  {isExtractingRTFFromTranscript ? (
-                    <Spinner size={16} className="animate-spin" />
-                  ) : (
-                    <Check size={16} />
-                  )}{" "}
-                  Confirm
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  disabled={isListening || isExtractingRTFFromTranscript}
-                  className="gap-1.5"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setFinalTranscript("");
-                  }}
-                >
-                  {" "}
-                  <Eraser size={16} /> Clear
-                </Button>
-                <Button
-                  disabled={isListening || isExtractingRTFFromTranscript}
-                  className="gap-1.5"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEditedVoiceInput(finalTranscript);
-                    setIsEditingVoiceInput(true);
-                  }}
-                >
-                  {" "}
-                  <Pen size={16} /> Edit
-                </Button>
-                <Button
-                  disabled={isExtractingRTFFromTranscript}
-                  variant="outline"
-                  className="gap-1.5"
-                  size="sm"
-                  onClick={isListening ? stopListening : startListening}
-                >
-                  {isListening ? <Stop size={16} /> : <Play size={16} />}{" "}
-                  {isListening ? "Stop" : "Start"}
-                </Button>
-                <Button
-                  disabled={
-                    isListening ||
-                    !finalTranscript.length ||
-                    isExtractingRTFFromTranscript
-                  }
-                  className="gap-1.5"
-                  size="sm"
-                  onClick={handleVoiceSubmission}
-                >
-                  {" "}
-                  {isExtractingRTFFromTranscript ? (
-                    <Spinner size={16} className="animate-spin" />
-                  ) : (
-                    <Checks size={16} />
-                  )}{" "}
-                  Submit
-                </Button>
-              </>
-            )}
-          </div>
-        </DialogContent>
+                  >
+                    {" "}
+                    <X size={16} /> Cancel
+                  </Button>
+                  <Button
+                    className="gap-1.5"
+                    size="sm"
+                    disabled={isExtractingRTFFromTranscript}
+                    onClick={() => {
+                      if (micModalType === "automatic-prompt") {
+                        handleAutomaticFormSubmission();
+                      } else {
+                        setFinalTranscript(editedVoiceInput);
+                        setIsEditingVoiceInput(false);
+                        setMicModalType("voice-assistant");
+                      }
+                    }}
+                  >
+                    {" "}
+                    {isExtractingRTFFromTranscript ? (
+                      <Spinner size={16} className="animate-spin" />
+                    ) : (
+                      <Check size={16} />
+                    )}{" "}
+                    Confirm
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    disabled={isListening || isExtractingRTFFromTranscript}
+                    className="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFinalTranscript("");
+                    }}
+                  >
+                    {" "}
+                    <Eraser size={16} /> Clear
+                  </Button>
+                  <Button
+                    disabled={isListening || isExtractingRTFFromTranscript}
+                    className="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditedVoiceInput(finalTranscript);
+                      setIsEditingVoiceInput(true);
+                    }}
+                  >
+                    {" "}
+                    <Pen size={16} /> Edit
+                  </Button>
+                  <Button
+                    disabled={isExtractingRTFFromTranscript}
+                    variant="outline"
+                    className="gap-1.5"
+                    size="sm"
+                    onClick={isListening ? stopListening : startListening}
+                  >
+                    {isListening ? <Stop size={16} /> : <Play size={16} />}{" "}
+                    {isListening ? "Stop" : "Start"}
+                  </Button>
+                  <Button
+                    disabled={
+                      isListening ||
+                      !finalTranscript.length ||
+                      isExtractingRTFFromTranscript
+                    }
+                    className="gap-1.5"
+                    size="sm"
+                    onClick={handleVoiceSubmission}
+                  >
+                    {" "}
+                    {isExtractingRTFFromTranscript ? (
+                      <Spinner size={16} className="animate-spin" />
+                    ) : (
+                      <Checks size={16} />
+                    )}{" "}
+                    Submit
+                  </Button>
+                </>
+              )}
+            </div>
+          </DialogContent>
+        )}
+        {!isSignedIn && <RestrictedModalContent />}
       </Dialog>
       <div className="container max-w-7xl scroll-m-10" id="prompt-enhancer">
         <div className="grid grid-cols-2 gap-10 shadow-lg rounded-3xl p-8 border bg-background">
@@ -1577,5 +1590,33 @@ function OutputCard({
         {isCopied ? <CopyCheckIcon size={14} /> : <CopyIcon size={14} />}
       </Button>
     </div>
+  );
+}
+
+function RestrictedModalContent() {
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>
+          <h3>Restricted</h3>
+        </DialogTitle>
+        <DialogDescription>
+          This feature requires you to sign in
+        </DialogDescription>
+      </DialogHeader>
+      <div className="flex flex-col items-center justify-center mt-10">
+        <div>
+          <img src="/restricted.png" className="w-full h-auto" alt="" />
+        </div>
+        <SignInButton>
+          <Button
+            className="rounded-lg gap-2 text-[17px] items-center mt-6"
+            size="lg"
+          >
+            <User size={18} /> SIGN UP
+          </Button>
+        </SignInButton>
+      </div>
+    </DialogContent>
   );
 }
