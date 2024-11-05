@@ -28,7 +28,6 @@ export const FEATURES = [
 export default function PricingTable() {
   const [frequency, setFrequency] = React.useState<"m" | "y">("m");
 
-  const { user, isLoaded } = useUser();
   const { data: subscription } = useUserSubscription();
 
   return (

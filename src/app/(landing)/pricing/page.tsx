@@ -1,19 +1,13 @@
 import React from "react";
-import { CheckIcon } from "lucide-react";
-import { auth } from "@clerk/nextjs/server";
 import {
   Raleway as HeadingFont,
   Raleway_Dots as HeadingDotFont,
-  Indie_Flower as HandWritingFont,
 } from "next/font/google";
-import { eq } from "drizzle-orm";
 
 import { cn } from "~/lib/utils";
-import BuyButton from "./_components/buy-button";
 import Header from "../_components/header";
-import { db } from "~/server/db";
-import { users } from "~/server/db/schema";
 import PricingTable from "./_components/pricing-table";
+import Footer from "../_components/footer";
 
 const headingFont = HeadingFont({
   subsets: ["latin"],
@@ -25,53 +19,7 @@ const headingDotFont = HeadingDotFont({
   weight: ["400"],
 });
 
-const handWritingFont = HandWritingFont({
-  subsets: ["latin"],
-  weight: ["400"],
-});
-
-const FEATURES = [
-  {
-    content: "Block Reels & Shorts",
-  },
-  {
-    content: "Hide Thumbnails",
-  },
-  {
-    content: "Daily Activity Tracking",
-  },
-  {
-    content: "Scheduled Blocking",
-  },
-  {
-    content: "300+ Porn Sites Blocked",
-  },
-  {
-    content: "Bulk Site Blocking",
-  },
-  {
-    content: "Reminders & Alerts",
-  },
-  {
-    content: "Time Limits",
-  },
-  {
-    content: "Privacy-Focused",
-  },
-  {
-    content: "... And more!",
-  },
-];
-
 const PricingPage: React.FC = async () => {
-  const { userId } = auth();
-
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId ?? ""),
-  });
-
-  const isSubscribed = !!user?.isSubscribed;
-
   return (
     <>
       <Header />
@@ -95,6 +43,7 @@ const PricingPage: React.FC = async () => {
         </section>
         <PricingTable />
       </div>
+      <Footer />
     </>
   );
 };
