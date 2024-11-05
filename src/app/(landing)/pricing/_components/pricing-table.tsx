@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { useUser } from "@clerk/nextjs";
 import { CheckIcon } from "lucide-react";
 import { Indie_Flower as HandWritingFont } from "next/font/google";
 
@@ -17,12 +16,11 @@ const handWritingFont = HandWritingFont({
 
 export const FEATURES = [
   "Enhance infinite prompts per month",
-  "Describe your project in normal sentences and the revolutionary algorithm will create the right prompt for you",
-  "Use the convenient voice input (not for Firefox users)",
-  "Use the prepared and configured roles for specialized results",
-  "Use the best frameworks available for LLM prompts",
-  "The Prompt Enhancer analyses your prompts, filters out the important points and turns everything into a prompt that works.",
-  "Access to 1.000+ Prompts Collection - from our community collected, refined & battle proofed",
+  "Natural language to prompt",
+  "Voice input",
+  "Handpick roles and options",
+  "Advance prompt filtering",
+  "1000+ Pre-structured community prompts",
 ];
 
 export default function PricingTable() {
