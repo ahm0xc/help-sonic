@@ -690,10 +690,44 @@ export default function PromptEnhancerV2({
     recognitionRef.current?.start();
   }
 
-  async function extractRTFFromTranscript() {
+  async function handleVoiceSubmission() {
     setIsExtractingRTFFromTranscript(true);
 
     const obj = await extractRTFFromText(finalTranscript);
+
+    if (!obj) {
+      toast.error("Failed to extract RTF from transcript");
+      setIsExtractingRTFFromTranscript(false);
+      return;
+    }
+
+    setIsExtractingRTFFromTranscript(false);
+    setFinalTranscript("");
+    setIsMicModalOpen(false);
+    abortListening();
+
+    setSelectedPromptFramework("RTF");
+    resetAllStates();
+
+    setIsUsingCustomRole(true);
+    setData((prev) => ({
+      ...prev,
+      role: obj.role,
+    }));
+    setData((prev) => ({
+      ...prev,
+      task: obj.task,
+    }));
+    setData((prev) => ({
+      ...prev,
+      format: obj.format,
+    }));
+  }
+
+  async function handleAutomaticFormSubmission() {
+    setIsExtractingRTFFromTranscript(true);
+
+    const obj = await extractRTFFromText(editedVoiceInput);
 
     if (!obj) {
       toast.error("Failed to extract RTF from transcript");
@@ -849,31 +883,15 @@ USER: Here are the details that the generated prompt should include\n
     router.refresh();
   }
 
-  // useEffect(() => {
-  //   if (!isMicModalOpen) {
-  //     abortListening();
-  //   }
-  // }, [isMicModalOpen]);
-
-  // useEffect(() => {
-  //   setSiriWaveConfig((prevConfig) => ({
-  //     ...prevConfig,
-  //     amplitude: isListening ? (volumeLevel > 0.02 ? volumeLevel * 255 : 0) : 0,
-  //     // speed: isListening ? (volumeLevel > 0.5 ? volumeLevel * 5 : 0) : 0,
-  //     // this frequency is only available in ios style
-  //     // frequency: isListening
-  //     //   ? volumeLevel > 0.01
-  //     //     ? volumeLevel * 10
-  //     //     : 0
-  //     //   : volumeLevel > 0.5
-  //     //     ? volumeLevel * 20
-  //     //     : 0,
-  //   }));
-  // }, [volumeLevel, isListening]);
-
   return (
     <>
-      <Dialog open={isMicModalOpen} onOpenChange={setIsMicModalOpen}>
+      <Dialog
+        open={isMicModalOpen}
+        onOpenChange={(bool) => {
+          if (isListening) return;
+          setIsMicModalOpen(bool);
+        }}
+      >
         <DialogContent>
           <div className="flex items-center justify-between">
             <div>
@@ -960,14 +978,24 @@ USER: Here are the details that the generated prompt should include\n
                 <Button
                   className="gap-1.5"
                   size="sm"
+                  disabled={isExtractingRTFFromTranscript}
                   onClick={() => {
-                    setFinalTranscript(editedVoiceInput);
-                    setIsEditingVoiceInput(false);
-                    setMicModalType("voice-assistant");
+                    if (micModalType === "automatic-prompt") {
+                      handleAutomaticFormSubmission();
+                    } else {
+                      setFinalTranscript(editedVoiceInput);
+                      setIsEditingVoiceInput(false);
+                      setMicModalType("voice-assistant");
+                    }
                   }}
                 >
                   {" "}
-                  <Check size={16} /> Confirm
+                  {isExtractingRTFFromTranscript ? (
+                    <Spinner size={16} className="animate-spin" />
+                  ) : (
+                    <Check size={16} />
+                  )}{" "}
+                  Confirm
                 </Button>
               </>
             ) : (
@@ -1015,7 +1043,7 @@ USER: Here are the details that the generated prompt should include\n
                   }
                   className="gap-1.5"
                   size="sm"
-                  onClick={extractRTFFromTranscript}
+                  onClick={handleVoiceSubmission}
                 >
                   {" "}
                   {isExtractingRTFFromTranscript ? (
