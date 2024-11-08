@@ -17,10 +17,9 @@ export default function Hero() {
         <div className="text-sm px-3 py-2 rounded-full bg-secondary max-w-fit mx-auto mb-4">
           Never think about prompt again!
         </div>
-        <h2 className="text-5xl font-bold mb-4">
-          Answer a Few Questions to
-          <br />
-          Get Your{" "}
+        <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          Answer a Few Questions to <br className="hidden md:block" />
+          Get Your <br className="block md:hidden" />
           <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
             Perfect Prompt!
           </span>

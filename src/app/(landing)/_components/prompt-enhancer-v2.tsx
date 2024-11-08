@@ -869,6 +869,10 @@ USER: Here are the details that the generated prompt should include\n
         return;
       }
 
+      document.querySelector("#prompt-outputs")?.scrollIntoView({
+        behavior: "smooth",
+      });
+
       let INTERNAL_output = "";
 
       for await (const delta of readStreamableValue(outputStream)) {
@@ -1072,7 +1076,7 @@ USER: Here are the details that the generated prompt should include\n
         {!isSignedIn && <RestrictedModalContent />}
       </Dialog>
       <div className="container max-w-7xl scroll-m-10" id="prompt-enhancer">
-        <div className="grid grid-cols-2 gap-10 shadow-lg rounded-3xl p-8 border bg-background">
+        <div className="grid md:grid-cols-2 gap-10 shadow-lg rounded-3xl p-8 border bg-background">
           <section>
             <div className="flex justify-between items-center">
               <h4 className="text-xl font-bold">Choose prompt Enhancer</h4>
@@ -1518,7 +1522,7 @@ USER: Here are the details that the generated prompt should include\n
               </form>
             </div>
           </section>
-          <section className="h-[600px] relative">
+          <section className="h-[600px] relative" id="prompt-outputs">
             <div className="p-6 rounded-2xl border h-full overflow-y-auto space-y-4 relative">
               {isOutputLoading && !output && (
                 <div className="p-5 rounded-xl bg-secondary/50 border">

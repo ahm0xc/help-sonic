@@ -45,10 +45,10 @@ export default function PromptHub() {
       <Header />
       <main className="min-h-screen max-w-[1340px] px-4 md:px-8 mx-auto">
         <div>
-          <h1 className="text-6xl font-bold mt-24">
+          <h1 className="text-4xl md:text-6xl font-bold mt-24">
             Discover the best AI <br /> prompts with Helpsonic.
           </h1>
-          <p className="text-lg mt-2 text-foreground.80">
+          <p className="text-base md:text-lg mt-2 text-foreground.80">
             The most useful AI prompts — organized and categorized in one spot.
           </p>
           <div className="mt-6 flex items-center">

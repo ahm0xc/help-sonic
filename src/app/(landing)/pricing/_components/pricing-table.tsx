@@ -58,14 +58,14 @@ export default function PricingTable() {
         </div>
       </div>
       <div className="mx-auto max-w-5xl rounded-2xl border bg-secondary p-10">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-0 md:items-start justify-between">
           <div>
             <p className="text-3xl font-semibold">Try our pricing</p>
             <p>Our most popular plan for everyone</p>
           </div>
           <div>
             <div className="flex items-end gap-2">
-              <p className="flex items-start gap-1">
+              <p className="flex items-start gap-1 text-blue-600">
                 <span className="text-2xl font-semibold text-foreground/70">
                   $
                 </span>
@@ -81,15 +81,15 @@ export default function PricingTable() {
             </div>
           </div>
         </div>
-        <div className="mt-6">
+        <div className="mt-8 md:mt-6">
           <p className="text-lg font-medium">Features</p>
           <p className="text-foreground/80">
             What you will get in this plan...
           </p>
-          <div className="mt-10 grid grid-cols-2 gap-6">
+          <div className="mt-10 grid md:grid-cols-2 gap-4 md:gap-6">
             {FEATURES.map((content) => (
               <div key={`feat-${content}`} className="flex items-center gap-2">
-                <span className="grid h-5 w-5 place-content-center rounded-[7px] bg-foreground/10">
+                <span className="grid h-5 w-5 min-h-5 min-w-5 place-content-center rounded-[7px] bg-foreground/10">
                   <CheckIcon size={12} />{" "}
                 </span>
                 <p>{content}</p>

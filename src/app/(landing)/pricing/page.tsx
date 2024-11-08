@@ -23,10 +23,15 @@ const PricingPage: React.FC = async () => {
   return (
     <>
       <Header />
-      <div className="pt-32 pb-48">
+      <div className="pt-24 md:pt-32 pb-48 px-4">
         <section className="mx-auto max-w-5xl">
           <div>
-            <h1 className={cn("text-7xl font-bold", headingFont.className)}>
+            <h1
+              className={cn(
+                "text-5xl md:text-7xl font-bold",
+                headingFont.className,
+              )}
+            >
               We<span className={headingDotFont.className}>&apos;ve</span> got a
               plan <br /> that&apos;s{" "}
               <span className={headingDotFont.className}>perfect</span> for you

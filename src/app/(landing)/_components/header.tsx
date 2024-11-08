@@ -6,19 +6,22 @@ import { Button } from "~/components/ui/button";
 
 function Header() {
   return (
-    <header className="flex flex-col md:flex-row justify-between items-center p-4 container">
+    <header className="flex flex-col gap-4 md:gap-0 md:flex-row justify-between items-center p-4 container">
       <Link href="/">
         <Image src="/logo.png" alt="Helpsonic" width={150} height={40} />
       </Link>
       <nav className="flex items-center">
-        <div className="flex items-center gap-6 mr-10">
-          <Link href="/#prompt-enhancer" className="hover:text-blue-500">
+        <div className="flex items-center gap-4 md:gap-6 mr-10">
+          <Link
+            href="/#prompt-enhancer"
+            className="hover:text-blue-500 text-[15px]"
+          >
             Prompt Enhancer
           </Link>
-          <Link href="/hub" className="hover:text-blue-500">
+          <Link href="/hub" className="hover:text-blue-500 text-[15px]">
             Prompt Hub
           </Link>
-          <Link href="/pricing" className="hover:text-blue-500">
+          <Link href="/pricing" className="hover:text-blue-500 text-[15px]">
             Pricing
           </Link>
         </div>

@@ -120,8 +120,8 @@ export default function Explorer({
   return (
     <div ref={containerRef} id="explorer" className="scroll-my-10">
       <section>
-        <div className="px-2 rounded-2xl h-16 bg-secondary border">
-          <div className="flex items-center justify-between h-full">
+        <div className="px-2 rounded-2xl md:h-16 py-3 md:py-0 bg-secondary border">
+          <div className="flex md:items-center justify-between h-full flex-col md:flex-row gap-4 md:gap-0">
             <div>
               {isSignedIn ? (
                 <Input
@@ -199,7 +199,7 @@ export default function Explorer({
                     setActivity(v);
                   }}
                 >
-                  <SelectTrigger className="w-[280px]">
+                  <SelectTrigger className="w-[200px] md:w-[280px]">
                     <SelectValue placeholder="Select a Activity" />
                   </SelectTrigger>
                   <SelectContent>
@@ -218,7 +218,7 @@ export default function Explorer({
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger>
                       <Select disabled>
-                        <SelectTrigger className="w-[280px]">
+                        <SelectTrigger className="w-[200px] md:w-[280px]">
                           <SelectValue placeholder="Select a Activity" />
                         </SelectTrigger>
                       </Select>
@@ -251,7 +251,7 @@ export default function Explorer({
         </div>
       </section>
       <section className="mt-10">
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6">
           {promptsInCurrentPage.map((prompt) => {
             const topicArr = prompt.topic.split("-");
             topicArr.pop();
