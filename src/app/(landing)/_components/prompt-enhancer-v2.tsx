@@ -61,6 +61,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import useUserSubscription from "~/hooks/use-user-subscription";
 
 const PREDEFINED_ROLES = [
   "SEO Blog Writer",
@@ -97,13 +98,7 @@ interface Data {
   example: string | undefined;
 }
 
-export default function PromptEnhancerV2({
-  isSubscribed,
-  freeTokens,
-}: {
-  isSubscribed: boolean;
-  freeTokens: number;
-}) {
+export default function PromptEnhancerV2() {
   const [selectedPromptFramework, setSelectedPromptFramework] = useState("RTF");
   const [isHumanizeResponseEnabled, setIsHumanizeResponseEnabled] =
     useState(true);
@@ -183,6 +178,11 @@ export default function PromptEnhancerV2({
   });
 
   const router = useRouter();
+
+  const {
+    data: { freeTokens = 0, isSubscribed = false } = {},
+    refetch: refetchUserSubscription,
+  } = useUserSubscription();
 
   function resetAllStates() {
     setData({
@@ -890,7 +890,10 @@ USER: Here are the details that the generated prompt should include\n
       console.error(error);
       toast.error("Error enhancing prompt");
     } finally {
-      await decrementFreeToken();
+      if (!isSubscribed) {
+        await decrementFreeToken();
+        refetchUserSubscription();
+      }
       setIsOutputLoading(false);
     }
 
@@ -1471,6 +1474,7 @@ USER: Here are the details that the generated prompt should include\n
                       >
                         <SparklesIcon className="h-4 w-4 mr-2" /> Enhance Prompt
                       </Button>
+
                       {!isSubscribed && (
                         <Alert className="mt-2">
                           {!isSubscribed && freeTokens > 0 ? (
@@ -1492,7 +1496,13 @@ USER: Here are the details that the generated prompt should include\n
                               <RocketLaunch className="h-4 w-4" />
                               <AlertDescription>
                                 You are out of free credits please consider
-                                subscribing to any of the plans to continue.
+                                subscribing to any of the plans to continue.{" "}
+                                <Link
+                                  href="/pricing"
+                                  className="text-blue-600 hover:underline"
+                                >
+                                  See pricing
+                                </Link>
                               </AlertDescription>
                             </>
                           )}

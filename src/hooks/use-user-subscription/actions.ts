@@ -15,5 +15,6 @@ export async function getUserSubscription(userId: string) {
     userId: user?.id,
     isSubscribed: user?.isSubscribed,
     subscriptionStatus: user?.subscriptionStatus,
+    freeTokens: user?.freeTokens,
   };
 }

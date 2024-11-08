@@ -10,6 +10,7 @@ export default function useUserSubscription() {
     queryKey: ["user-subscription"],
     queryFn: () => getUserSubscription(userId ?? ""),
     enabled: !!userId,
+    refetchOnWindowFocus: true,
   });
 
   return query;

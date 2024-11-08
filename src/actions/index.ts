@@ -24,7 +24,7 @@ export default async function decrementFreeToken(count = 1) {
     })
     .where(eq(usersTable.id, userId));
 
-  revalidatePath("/");
+  // revalidatePath("/");
 }
 
 export async function extractRTFFromText(text: string) {
