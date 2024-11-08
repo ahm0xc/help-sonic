@@ -12,6 +12,6 @@ export const pricingPlans = [
         link: process.env.NEXT_PUBLIC_PRO_PLAN_YEARLY_LINK,
       },
     },
-    cta: "Start for free",
+    cta: "Buy Plan",
   },
 ];

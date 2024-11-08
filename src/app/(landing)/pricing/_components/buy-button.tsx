@@ -25,7 +25,7 @@ export default function BuyButton({
           size="lg"
           className="bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xl h-14 rounded-xl"
         >
-          But Plan
+          Sign In
         </Button>
       </SignInButton>
     );

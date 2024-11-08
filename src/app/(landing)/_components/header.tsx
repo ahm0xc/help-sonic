@@ -6,7 +6,7 @@ import { Button } from "~/components/ui/button";
 
 function Header() {
   return (
-    <header className="flex justify-between items-center p-4 container">
+    <header className="flex flex-col md:flex-row justify-between items-center p-4 container">
       <Link href="/">
         <Image src="/logo.png" alt="Helpsonic" width={150} height={40} />
       </Link>
