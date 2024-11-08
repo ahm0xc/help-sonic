@@ -1,6 +1,16 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { parseAsInteger, useQueryState } from "nuqs";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Clipboard,
+  X,
+} from "@phosphor-icons/react";
+import { CopyIcon, ExpandIcon, Maximize2Icon } from "lucide-react";
+import { toast } from "sonner";
 
 import { Input } from "~/components/ui/input";
 import {
@@ -13,15 +23,7 @@ import {
 } from "~/components/ui/select";
 import type { Data } from "./page";
 import { Badge } from "~/components/ui/badge";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  Clipboard,
-  X,
-} from "@phosphor-icons/react";
 import { cn } from "~/lib/utils";
-import { useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Tooltip,
@@ -38,9 +40,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { CopyIcon, Expand, ExpandIcon, Maximize2Icon } from "lucide-react";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { toast } from "sonner";
+import { SignUpButton, useUser } from "@clerk/nextjs";
 
 export const PROMPT_PER_PAGE = 10;
 
@@ -66,6 +67,8 @@ export default function Explorer({
     defaultValue: "",
   });
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(0));
+
+  const { isSignedIn } = useUser();
 
   function nextPage() {
     containerRef.current?.scrollIntoView({
@@ -254,32 +257,88 @@ export default function Explorer({
           })}
         </div>
       </section>
-      <section className="my-6 flex justify-between items-center">
-        <p className="text-sm text-foreground/80">
-          Page {page + 1} of {totalPage + 1}
-        </p>
-        <div className="flex items-center justify-end gap-4">
-          <Button
-            onClick={prevPage}
-            variant="outline"
-            className="gap-2"
-            disabled={!hasPreviousPage}
-          >
-            <ArrowLeft className="size-4" />
-            Prev
-          </Button>
-          <Button
-            onClick={nextPage}
-            variant="outline"
-            className="gap-2"
-            disabled={!hasNextPage}
-          >
-            Next
-            <ArrowRight className="size-4" />
-          </Button>
-        </div>
-      </section>
+      {isSignedIn ? (
+        <FooterPaginationControls
+          page={page}
+          totalPage={totalPage - 1}
+          prevPage={prevPage}
+          hasPreviousPage={hasPreviousPage}
+          nextPage={nextPage}
+          hasNextPage={hasNextPage}
+        />
+      ) : (
+        <SignUpToContinue />
+      )}
     </div>
+  );
+}
+
+function FooterPaginationControls({
+  page,
+  totalPage,
+  prevPage,
+  hasPreviousPage,
+  nextPage,
+  hasNextPage,
+}: {
+  page: number;
+  totalPage: number;
+  prevPage: () => void;
+  hasPreviousPage: boolean;
+  nextPage: () => void;
+  hasNextPage: boolean;
+}) {
+  return (
+    <section className="my-6 flex justify-between items-center">
+      <p className="text-sm text-foreground/80">
+        Page {page + 1} of {totalPage + 1}
+      </p>
+      <div className="flex items-center justify-end gap-4">
+        <Button
+          onClick={prevPage}
+          variant="outline"
+          className="gap-2"
+          disabled={!hasPreviousPage}
+        >
+          <ArrowLeft className="size-4" />
+          Prev
+        </Button>
+        <Button
+          onClick={nextPage}
+          variant="outline"
+          className="gap-2"
+          disabled={!hasNextPage}
+        >
+          Next
+          <ArrowRight className="size-4" />
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function SignUpToContinue() {
+  return (
+    <section
+      className={cn(
+        "my-6 relative",
+        "before:absolute before:content=[''] before:h-52 before:bg-gradient-to-b before:from-transparent before:to-background before:top-0 before:inset-x-0 before:-translate-y-full",
+      )}
+    >
+      <div className="my-12 flex flex-col justify-center items-center">
+        <h3 className="text-3xl font-bold text-balance">
+          Sing Up to view 3000+ Prompts
+        </h3>
+        <SignUpButton>
+          <Button
+            className="mt-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-lg py-6"
+            size="lg"
+          >
+            Sign Up to Continue
+          </Button>
+        </SignUpButton>
+      </div>
+    </section>
   );
 }
 
