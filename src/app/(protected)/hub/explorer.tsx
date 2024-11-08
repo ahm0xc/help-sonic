@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Check,
   Clipboard,
+  LockSimple,
   X,
 } from "@phosphor-icons/react";
 import { CopyIcon, ExpandIcon, Maximize2Icon } from "lucide-react";
@@ -122,59 +123,112 @@ export default function Explorer({
         <div className="px-2 rounded-2xl h-16 bg-secondary border">
           <div className="flex items-center justify-between h-full">
             <div>
-              <Input
-                className="w-full min-w-full md:w-[300px] rounded-xl h-11"
-                placeholder="Search prompts.."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPage(0);
-                }}
-              />
+              {isSignedIn ? (
+                <Input
+                  className="w-full min-w-full md:w-[300px] rounded-xl h-11"
+                  placeholder="Search prompts.."
+                  value={searchQuery}
+                  disabled={!isSignedIn}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setPage(0);
+                  }}
+                />
+              ) : (
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger>
+                      <Input
+                        className="w-full min-w-full md:w-[300px] rounded-xl h-11"
+                        placeholder="Search prompts.."
+                        value={searchQuery}
+                        disabled={!isSignedIn}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className="flex gap-2 items-center">
+                      <LockSimple weight="fill" /> Sign in to Search
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
             <div className="flex items-center gap-3">
-              <Select
-                value={topic}
-                onValueChange={(v) => {
-                  setPage(0);
-                  setTopic(v);
-                }}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select a Topic" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="all">All</SelectItem>
-                    {topics.map((t) => (
-                      <SelectItem value={t} key={`topic-filter-${t}`}>
-                        {t}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <Select
-                value={activity}
-                onValueChange={(v) => {
-                  setPage(0);
-                  setActivity(v);
-                }}
-              >
-                <SelectTrigger className="w-[280px]">
-                  <SelectValue placeholder="Select a Activity" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="all">All</SelectItem>
-                    {activities.map((a) => (
-                      <SelectItem value={a} key={`activity-filter-${a}`}>
-                        {a}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              {isSignedIn ? (
+                <Select
+                  value={topic}
+                  onValueChange={(v) => {
+                    setPage(0);
+                    setTopic(v);
+                  }}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select a Topic" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="all">All</SelectItem>
+                      {topics.map((t) => (
+                        <SelectItem value={t} key={`topic-filter-${t}`}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger>
+                      <Select disabled>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Select a Topic" />
+                        </SelectTrigger>
+                      </Select>
+                    </TooltipTrigger>
+                    <TooltipContent className="flex gap-2 items-center">
+                      <LockSimple weight="fill" /> Sign in to choose Topics
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {isSignedIn ? (
+                <Select
+                  value={activity}
+                  onValueChange={(v) => {
+                    setPage(0);
+                    setActivity(v);
+                  }}
+                >
+                  <SelectTrigger className="w-[280px]">
+                    <SelectValue placeholder="Select a Activity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="all">All</SelectItem>
+                      {activities.map((a) => (
+                        <SelectItem value={a} key={`activity-filter-${a}`}>
+                          {a}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger>
+                      <Select disabled>
+                        <SelectTrigger className="w-[280px]">
+                          <SelectValue placeholder="Select a Activity" />
+                        </SelectTrigger>
+                      </Select>
+                    </TooltipTrigger>
+                    <TooltipContent className="flex gap-2 items-center">
+                      <LockSimple weight="fill" /> Sign in to choose Activities
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {(topic || activity || searchQuery) && (
                 <TooltipProvider>
                   <Tooltip>
@@ -327,7 +381,7 @@ function SignUpToContinue() {
     >
       <div className="my-12 flex flex-col justify-center items-center">
         <h3 className="text-3xl font-bold text-balance">
-          Sing Up to view 3000+ Prompts
+          Sing Up to view <span className="text-blue-600">3000+</span> Prompts
         </h3>
         <SignUpButton>
           <Button

@@ -37,7 +37,7 @@ const PricingPage: React.FC = async () => {
                 headingFont.className,
               )}
             >
-              cheap <span /> affordable <span /> worthy
+              convenient <span /> affordable <span /> worthy
             </p>
           </div>
         </section>
