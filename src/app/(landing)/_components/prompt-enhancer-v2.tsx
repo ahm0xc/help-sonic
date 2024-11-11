@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs";
+import { usePlausible } from "next-plausible";
 import {
   ChevronRightIcon,
   CopyCheckIcon,
@@ -138,8 +139,6 @@ export default function PromptEnhancerV2() {
   //   enabled: isListening,
   // });
 
-  const recognitionRef = useRef<any>(null);
-
   const [data, setData] = useState<Data>({
     role: PREDEFINED_ROLES[0],
     documentType: "None",
@@ -166,7 +165,7 @@ export default function PromptEnhancerV2() {
     result: undefined,
     example: undefined,
   });
-
+  const recognitionRef = useRef<any>(null);
   const roleInputRef = useRef<HTMLInputElement>(null);
 
   const { user, isSignedIn } = useUser();
@@ -178,6 +177,8 @@ export default function PromptEnhancerV2() {
   });
 
   const router = useRouter();
+
+  const plausible = usePlausible();
 
   const {
     data: { freeTokens = 0, isSubscribed = false } = {},
@@ -779,6 +780,8 @@ export default function PromptEnhancerV2() {
     e.preventDefault();
 
     if (!isSubscribed && freeTokens < 0) {
+      plausible("dropped-enhancing-out-of-credits");
+
       toast(
         "You have exceeded your free tokens. Please upgrade your plan to generate a prompt",
         {
@@ -881,6 +884,8 @@ USER: Here are the details that the generated prompt should include\n
         setOutput(INTERNAL_output);
       }
 
+      plausible("enhanced-prompt");
+
       const res = await saveHistory(INTERNAL_output, data);
 
       if (res?.error) {
@@ -889,6 +894,7 @@ USER: Here are the details that the generated prompt should include\n
     } catch (error) {
       console.error(error);
       toast.error("Error enhancing prompt");
+      plausible("faced-error-while-enhancing-prompt");
     } finally {
       if (!isSubscribed) {
         await decrementFreeToken();
@@ -924,7 +930,7 @@ USER: Here are the details that the generated prompt should include\n
                     : "Automatically detects the field input from text. This can be useful for creating prompts that are more personalized and engaging."}{" "}
                 </p>
               </div>
-              {micStatus && (
+              {micStatus && micModalType === "voice-assistant" && (
                 <span className="text-xs font-medium italic">
                   <span className="not-italic">status: </span>
                   {micStatus}
@@ -1000,6 +1006,7 @@ USER: Here are the details that the generated prompt should include\n
                     onClick={() => {
                       if (micModalType === "automatic-prompt") {
                         handleAutomaticFormSubmission();
+                        plausible("clicked-submit-automatic-prompt");
                       } else {
                         setFinalTranscript(editedVoiceInput);
                         setIsEditingVoiceInput(false);
@@ -1061,7 +1068,10 @@ USER: Here are the details that the generated prompt should include\n
                     }
                     className="gap-1.5"
                     size="sm"
-                    onClick={handleVoiceSubmission}
+                    onClick={() => {
+                      handleVoiceSubmission();
+                      plausible("clicked-submit-voice-input");
+                    }}
                   >
                     {" "}
                     {isExtractingRTFFromTranscript ? (
@@ -1090,7 +1100,10 @@ USER: Here are the details that the generated prompt should include\n
                       size="icon"
                       variant="outline"
                       className="min-h-9 min-w-9 rounded-full"
-                      onClick={showAutomaticPromptModal}
+                      onClick={() => {
+                        plausible("clicked-automatic-prompt-modal-trigger");
+                        showAutomaticPromptModal();
+                      }}
                     >
                       <StarFour size={18} />
                     </Button>
@@ -1109,7 +1122,10 @@ USER: Here are the details that the generated prompt should include\n
                       size="icon"
                       variant="outline"
                       className="min-h-9 min-w-9 rounded-full"
-                      onClick={handleOnMicClick}
+                      onClick={() => {
+                        plausible("clicked-mic-modal-trigger");
+                        handleOnMicClick();
+                      }}
                     >
                       <Microphone size={18} />
                     </Button>
@@ -1515,7 +1531,7 @@ USER: Here are the details that the generated prompt should include\n
                       <Button
                         size="lg"
                         className="bg-gradient-to-r from-purple-500 to-blue-500"
-                        type="button"
+                        type="submit"
                       >
                         <SparklesIcon className="h-4 w-4 mr-2" /> Sign in to
                         Enhance Prompt
