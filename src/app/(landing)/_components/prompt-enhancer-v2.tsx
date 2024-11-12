@@ -221,17 +221,6 @@ export default function PromptEnhancerV2() {
         "The RTF Prompt Framework (Role-Task-Format) is a structured approach for creating effective AI prompts, especially useful for developers and content creators.",
       form: {
         elements: [
-          // {
-          //   type: "select",
-          //   label: "Role",
-          //   name: "role",
-          //   placeholder: "Select role",
-          //   options: ["SEO Blog Writer", "Rewriter", "Coder", "Fitness Coach"],
-          //   defaultValue: "SEO Blog Writer",
-          //   onChange: (value: string) => {
-          //     setData((prev) => ({ ...prev, role: value }));
-          //   },
-          // },
           {
             type: "select",
             label: "Document Type",
@@ -245,8 +234,6 @@ export default function PromptEnhancerV2() {
           },
           {
             type: "advance-options",
-            // name: "advance-options",
-            // onChange: () => {},
           },
           {
             type: "textarea",
@@ -259,6 +246,7 @@ export default function PromptEnhancerV2() {
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, task: value }));
             },
+            required: true,
           },
           {
             type: "textarea",
@@ -271,6 +259,7 @@ export default function PromptEnhancerV2() {
             onChange: (value: string) => {
               setData((prev) => ({ ...prev, format: value }));
             },
+            required: true,
           },
         ],
       },
@@ -364,7 +353,7 @@ export default function PromptEnhancerV2() {
             minRows: 3,
             value: data.result,
             onChange: (value: string) => {
-              setData((prev) => ({ ...prev, action: value }));
+              setData((prev) => ({ ...prev, result: value }));
             },
           },
           {
@@ -377,7 +366,7 @@ export default function PromptEnhancerV2() {
             minRows: 3,
             value: data.example,
             onChange: (value: string) => {
-              setData((prev) => ({ ...prev, goal: value }));
+              setData((prev) => ({ ...prev, example: value }));
             },
             required: true,
           },
@@ -795,10 +784,13 @@ export default function PromptEnhancerV2() {
       return;
     }
 
-    if (!data.task || !data.role || !data.role || !data.documentType) {
-      toast.warning("Fill up the fields");
-      return;
-    }
+    // if (
+    //   (!data.task || !data.role || !data.role || !data.documentType) &&
+    //   selectedPromptFramework.toLowerCase() === "rtf"
+    // ) {
+    //   toast.warning("Fill up the required fields", {});
+    //   return;
+    // }
 
     try {
       setOutput("");
@@ -1432,7 +1424,12 @@ USER: Here are the details that the generated prompt should include\n
                       case "text-input": {
                         return (
                           <div key={el.name} className="col-span-2">
-                            <Label htmlFor={el.name}>{el.label}</Label>
+                            <Label htmlFor={el.name}>
+                              {el.label}{" "}
+                              {el.required && (
+                                <sup className="text-red-500">*</sup>
+                              )}
+                            </Label>
                             <Input
                               type={el.type}
                               id={el.name}
@@ -1441,6 +1438,7 @@ USER: Here are the details that the generated prompt should include\n
                               defaultValue={el.defaultValue}
                               value={el.value}
                               onChange={(e) => el.onChange?.(e.target.value)}
+                              required={el.required}
                             />
                           </div>
                         );
@@ -1448,7 +1446,12 @@ USER: Here are the details that the generated prompt should include\n
                       case "textarea": {
                         return (
                           <div key={el.name} className="col-span-2">
-                            <Label htmlFor={el.name}>{el.label}</Label>
+                            <Label htmlFor={el.name}>
+                              {el.label}{" "}
+                              {el.required && (
+                                <sup className="text-red-500">*</sup>
+                              )}
+                            </Label>
                             <Textarea
                               id={el.name}
                               name={el.name}
@@ -1457,6 +1460,7 @@ USER: Here are the details that the generated prompt should include\n
                               rows={el.minRows}
                               value={el.value}
                               onChange={(e) => el.onChange?.(e.target.value)}
+                              required={el.required}
                             />
                           </div>
                         );
