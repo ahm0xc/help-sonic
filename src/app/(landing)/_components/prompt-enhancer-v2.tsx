@@ -63,6 +63,7 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import useUserSubscription from "~/hooks/use-user-subscription";
+import TutorialButton from "./tutorial-button";
 
 const PREDEFINED_ROLES = [
   "SEO Blog Writer",
@@ -99,7 +100,11 @@ interface Data {
   example: string | undefined;
 }
 
-export default function PromptEnhancerV2() {
+export default function PromptEnhancerV2({
+  tutorialVideoId,
+}: {
+  tutorialVideoId?: string;
+}) {
   const [selectedPromptFramework, setSelectedPromptFramework] = useState("RTF");
   const [isHumanizeResponseEnabled, setIsHumanizeResponseEnabled] =
     useState(true);
@@ -1487,13 +1492,19 @@ USER: Here are the details that the generated prompt should include\n
                 <div className="mt-4">
                   <SignedIn>
                     <div className="space-y-2">
-                      <Button
-                        size="lg"
-                        className="bg-gradient-to-r from-purple-500 to-blue-500"
-                        type="submit"
-                      >
-                        <SparklesIcon className="h-4 w-4 mr-2" /> Enhance Prompt
-                      </Button>
+                      <div className="flex gap-4 items-center">
+                        <Button
+                          size="lg"
+                          className="bg-gradient-to-r from-purple-500 to-blue-500"
+                          type="submit"
+                        >
+                          <SparklesIcon className="h-4 w-4 mr-2" /> Enhance
+                          Prompt
+                        </Button>
+                        {tutorialVideoId && (
+                          <TutorialButton tutorialVideoId={tutorialVideoId} />
+                        )}
+                      </div>
 
                       {!isSubscribed && (
                         <Alert className="mt-2">
@@ -1535,7 +1546,7 @@ USER: Here are the details that the generated prompt should include\n
                       <Button
                         size="lg"
                         className="bg-gradient-to-r from-purple-500 to-blue-500"
-                        type="submit"
+                        type="button"
                       >
                         <SparklesIcon className="h-4 w-4 mr-2" /> Sign in to
                         Enhance Prompt
