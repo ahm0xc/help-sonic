@@ -831,7 +831,7 @@ USER: Here are the details that the generated prompt should include\n
 - height is: ${data.height}\n
 - fitness level is: ${data.fitnessLevel}`);
         outputStream = output;
-      } else if (selectedPromptFramework.toLowerCase() === "rtf") {
+      } else if (selectedPromptFramework.toLowerCase() === "tag") {
         const { output } =
           await generate(`SYSTEM: You are a powerful prompt enhancer who writes a prompt by the user given information\n
 INSTRUCTIONS:\n
