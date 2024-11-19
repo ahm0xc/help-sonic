@@ -1,4 +1,10 @@
+"use client";
+
+import Link from "next/link";
 import Marquee from "react-fast-marquee";
+import Vimeo from "@u-wave/react-vimeo";
+
+import { RainbowButton } from "~/components/ui/rainbow-button";
 
 const AI_LOGOS = [
   "anthropic",
@@ -10,7 +16,11 @@ const AI_LOGOS = [
   "x-ai",
 ];
 
-export default function Hero() {
+export default function Hero({
+  tutorialVideoId,
+}: {
+  tutorialVideoId?: string;
+}) {
   return (
     <div className="container mx-auto px-4 py-28 pb-20">
       <div className="text-center mb-8">
@@ -40,6 +50,34 @@ export default function Hero() {
             />
           ))}
         </Marquee>
+      </div>
+      <div className="flex flex-col items-center justify-center pt-4">
+        <div>
+          <Link href="/#prompt-enhancer">
+            <RainbowButton className="rounded-xl h-12 text-lg">
+              Get Started
+            </RainbowButton>
+          </Link>
+        </div>
+        {tutorialVideoId && (
+          <div className="flex flex-col items-center justify-center pt-6 max-w-5xl w-full">
+            <p className="text-gray-600 text-sm">or watch a tutorial</p>
+            <Vimeo
+              style={{
+                width: "100%",
+                borderRadius: "12px",
+                overflow: "hidden",
+                marginTop: "16px",
+              }}
+              responsive
+              showByline={false}
+              showPortrait={false}
+              showTitle={false}
+              dnt={true}
+              video={tutorialVideoId}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
